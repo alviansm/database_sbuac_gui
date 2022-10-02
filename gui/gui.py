@@ -2,12 +2,26 @@ import tkinter as tk
 from tkinter import HORIZONTAL, ttk
 from tkinter import font
 from tkinter import messagebox
-from turtle import bgcolor, width
 from database.database import Database
+import gui.new_project as np
 from PIL import ImageTk, Image
+import os
 
-db = Database("./database/sbu_projects.db")
+db = Database("sbu_projects.db")
 # db.insert("Kereta Ukur HST", 2022, "40000", "PT KAI", 35, "./images/9q02ejo.png")
+# db.insert("ACI 2501", 2022, "25000", "KTMB", 7, "./images/9q02ejo.png")
+# db.insert("ACI 0802", 2022, "8000", "PNR", 6, "./images/9q02ejo.png")
+# db.insert("ACI 4003", 2022, "40000", "PNR", 22, "./images/9q02ejo.png")
+# db.insert("ACI 4201", 2022, "42000", "PNR", 10, "./images/9q02ejo.png")
+# db.insert("ACI 4202", 2022, "42000", "PNR", 15, "./images/9q02ejo.png")
+# db.insert("ACI 4501", 2022, "45000", "PNR", 15, "./images/9q02ejo.png")
+# db.insert("ACI 0801", 2022, "8000", "KAI", 39, "./images/9q02ejo.png")
+# db.insert("ACI 1803", 2022, "18000", "KAI", 476, "./images/9q02ejo.png")
+# db.insert("ACI 2503", 2022, "25000", "KAI", 80, "./images/9q02ejo.png")
+# db.insert("ACI 4001, 4002, 4003", 2022, "40000", "KAI", 697, "./images/9q02ejo.png")
+# db.insert("ACI 1803", 2022, "18000", "KAI", 80, "./images/9q02ejo.png")
+# db.insert("ACI 0501", 2022, "5000", "KAI", 1, "./images/9q02ejo.png")
+# db.insert("ACI 1803", 2022, "18000", "KAI", 10, "./images/9q02ejo.png")
 
 class Application(tk.Frame):
     def __init__(self, master):
@@ -31,6 +45,7 @@ class Application(tk.Frame):
             "2021",
             "2022",            
             "2023",
+            "SEMUA"
         ]
         self.U_OPTIONS = [
             "meter",
@@ -81,6 +96,7 @@ class Application(tk.Frame):
         self.group_loading_bar()
         self.group_list_result()
         self.group_messages(0)
+        self.fn_clear_selection()
 
     # Menu commands
     def menu_commands(self):
@@ -90,18 +106,18 @@ class Application(tk.Frame):
         # File
         self.file_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
         self.app_menu.add_cascade(label="File", menu=self.file_menu)
-        self.file_menu.add_command(label="Preferensi", command=self.menu_commands)
-        self.file_menu.add_separator()
+        self.file_menu.add_command(label="Ekspor database", command=self.menu_commands)
         self.file_menu.add_command(label="Backup database", command=self.menu_commands)
+        self.file_menu.add_command(label="Pilih database", command=self.menu_commands) 
         self.file_menu.add_separator()
-        self.file_menu.add_command(label="Pilih database", command=self.menu_commands)        
+        self.file_menu.add_command(label="Preferensi", command=self.menu_commands)               
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Keluar", command=self.master.quit)
 
-        # Tambah
+        # Edit
         self.tambah_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
-        self.app_menu.add_cascade(label="Tambah", menu=self.tambah_menu)
-        self.tambah_menu.add_command(label="Proyek Baru", command=self.menu_commands)
+        self.app_menu.add_cascade(label="Edit", menu=self.tambah_menu)
+        self.tambah_menu.add_command(label="Proyek Baru", command=lambda: np.window_new_project(self.master))
         self.tambah_menu.add_command(label="Edit BOM", command=self.menu_commands)
         self.tambah_menu.add_command(label="Edit SPP", command=self.menu_commands)
 
@@ -112,10 +128,11 @@ class Application(tk.Frame):
         self.export_menu.add_command(label="Sebagai CSV", command=self.menu_commands)
         self.export_menu.add_command(label="Sebaga PDF", command=self.menu_commands)
 
-        # Bantuan
+        # Petunjuk
         self.bantuan_menu = tk.Menu(self.app_menu, font=("Arial", 11), tearoff=False)
-        self.app_menu.add_cascade(label="Bantuan", menu=self.bantuan_menu)
+        self.app_menu.add_cascade(label="Petunjuk", menu=self.bantuan_menu)
         self.bantuan_menu.add_command(label="Cara Penggunaan", command=self.menu_commands)
+        self.bantuan_menu.add_command(label="Petunjuk membagikan database", command=self.menu_commands)
         self.bantuan_menu.add_separator()
         self.bantuan_menu.add_command(label="Tentang Kami", command=self.show_popup_about)
 
@@ -131,9 +148,9 @@ class Application(tk.Frame):
 
         # Pilih tahun
         self.label_year = tk.Label(self.frame_search_by_year, text="Tahun : ")
-        self.label_year.grid(row=1, column=0)
+        self.label_year.grid(row=1, column=0, sticky=tk.E)
         self.search_year_entry = ttk.OptionMenu(self.frame_search_by_year, self.search_year, *self.Y_OPTIONS)
-        self.search_year_entry.grid(row=1, column=1)
+        self.search_year_entry.grid(row=1, column=1, sticky=tk.E)
 
         # Entry nama
         self.label_name = tk.Label(self.frame_search_by_year, text="Nama Proyek : ")
@@ -144,11 +161,11 @@ class Application(tk.Frame):
         # Entry project code
         self.label_bom_code = tk.Label(self.frame_search_by_year, text="Kode Proyek : ")
         self.label_bom_code.grid(row=0, column=2, padx=12, sticky=tk.E)
-        self.entry_project_code = tk.Entry(self.frame_search_by_year, textvariable=self.search_name, font=("Arial", 11), width=16)
+        self.entry_project_code = tk.Entry(self.frame_search_by_year, textvariable=self.search_bomcode, font=("Arial", 11), width=16)
         self.entry_project_code.grid(row=0, column=3)  
 
         # Tombol cari
-        self.button_year_search = ttk.Button(self.frame_search_by_year, text="Cari", width=8, padding=1)
+        self.button_year_search = ttk.Button(self.frame_search_by_year, text="Cari", width=8, padding=1, command=lambda: self.fn_search_by(self.search_year.get(), self.search_name.get(), self.search_bomcode.get()))
         self.button_year_search.grid(row=0, column=6, padx=1, sticky=tk.E)
 
         # Checkbox -> Proyek / Component option
@@ -169,7 +186,7 @@ class Application(tk.Frame):
 
         # Entry tahun proyek
         self.label_project_year = tk.Label(self.frame_data_update, text="Tahun : ")
-        self.label_project_year.grid(row=1, column=0, sticky=tk.W)
+        self.label_project_year.grid(row=1, column=0, sticky=tk.E)
         self.entry_project_year = tk.Entry(self.frame_data_update, textvariable=self.update_tahun, font=("Arial", 11), width=16)
         self.entry_project_year.grid(row=1, column=1, pady=7)
 
@@ -192,11 +209,11 @@ class Application(tk.Frame):
         self.entry_project_units.grid(row=0, column=5, pady=7)
 
         # Tombol -> Bersihkan
-        self.button_clear_selection = ttk.Button(self.frame_data_update, text="Bersihkan", command=self.fn_clear_selection)
+        self.button_clear_selection = ttk.Button(self.frame_data_update, text="Clear", command=self.fn_clear_selection)
         self.button_clear_selection.grid(row=1, column=5, sticky=tk.E)
 
         # Tombol -> Lebih lanjut & Update
-        self.button_more = ttk.Button(self.frame_data_update, text="Lebih Lanjut", command=self.show_more_bom)
+        self.button_more = ttk.Button(self.frame_data_update, text="BOM", command=self.show_more_bom)
         self.button_more.grid(row=2, column=1, sticky=tk.W)
         self.button_submit_update = ttk.Button(self.frame_data_update, text="Update", command=self.fn_update_project)
         self.button_submit_update.grid(row=2, column=0)
@@ -229,7 +246,8 @@ class Application(tk.Frame):
             "Berhasil menambahkan proyek baru",
             "Berhasil mengupdate data proyek",
             "Pencarian ditemukan",
-            "Pencarian tidak ditemukan"
+            "Pencarian tidak ditemukan",
+            "Database masih kosong"
         ]
         self.msg_selection = self.MESSAGES[0]
 
@@ -247,9 +265,9 @@ class Application(tk.Frame):
         self.about_us.iconbitmap("./favicon.ico")
 
         # Images -> PT IMS & Kampus Merdeka
-        self.image_ims = ImageTk.PhotoImage(Image.open("./images/logo-ims.png"))
+        self.image_ims = ImageTk.PhotoImage(Image.open("./assets/images/logo-ims.png"))
         self.image_ims_label = tk.Label(self.about_us, image=self.image_ims).pack(pady=10)
-        self.image_msib = ImageTk.PhotoImage(Image.open("./images/logo-msib.png"))
+        self.image_msib = ImageTk.PhotoImage(Image.open("./assets/images/logo-msib.png"))
         self.image_msib_label = tk.Label(self.about_us, image=self.image_msib).pack(pady=10)
 
         # Keterangan
@@ -291,6 +309,11 @@ class Application(tk.Frame):
         for row in db.fetch():
             self.list_result.insert(tk.END, row)
 
+    def fn_search_by(self, param_year, param_name, param_id):
+        self.list_result.delete(0, tk.END)
+        for row in db.search_by_year(param_year, param_name, param_id):
+            self.list_result.insert(tk.END, row)
+
     # Used in new window -> tambah proyek
     def project_add(self):
         if (self.update_nama.get() == "" and self.update_tahun.get() < 1900 and self.update_kapasitas.get() < 0 and self.update_customer.get() == "" and self.update_jumlah.get() <= 0):
@@ -298,7 +321,8 @@ class Application(tk.Frame):
             return
         db.insert(self.update_nama.get(), self.update_tahun.get(), self.update_kapasitas.get(), self.update_customer.get(), self.update_jumlah.get(), "")
         self.list_result.delete(0, tk.END)
-        self.list_result.insert(END, (self.update_nama.get(), self.update_tahun.get(), self.update_kapasitas.get(), self.update_customer.get(), self.update_jumlah.get()))
+        self.list_result.insert(tk.END, (self.update_nama.get(), self.update_tahun.get(), self.update_kapasitas.get(), self.update_customer.get(), self.update_jumlah.get()))
+        self.fn_clear_selection()
         self.populate_list()
 
     def select_item(self, event):
@@ -326,10 +350,13 @@ class Application(tk.Frame):
 
     def remove_project(self):
         db.remove(self.selected_project[0])
-        populate_list()
+        self.fn_clear_selection()
+        self.populate_list()
 
     def fn_update_project(self):
-        pass
+        db.update(self.selected_project[0], self.update_nama.get(), self.update_tahun.get(), self.update_kapasitas.get(), self.update_customer.get(), self.update_jumlah.get())
+        self.fn_clear_selection()
+        self.populate_list()
 
     def fn_clear_selection(self):
         # nama proyek

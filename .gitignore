@@ -1,2 +1,4 @@
 ./database/sbu_projects.db
 .venv
+./dist
+./build
