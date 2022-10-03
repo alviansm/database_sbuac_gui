@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
+
 from database.database import Database
-from PIL import ImageTk, Image
-import os
+import gui.commands.commands as command
 
 db = Database("sbu_projects.db")
 
@@ -29,8 +29,6 @@ def window_new_project(master, project_name=""):
         input_update_customer = tk.StringVar()
         input_update_totals = tk.IntVar()
         input_update_image = tk.StringVar()
-
-        group_messages(new_project, 0)
 
         # Judul
         if project_name == "":
@@ -75,7 +73,7 @@ def window_new_project(master, project_name=""):
         group_buttons.grid(row=2, column=0, columnspan=6, padx=10, sticky=tk.W)
         button_insert_project = ttk.Button(group_buttons, text="Tambahkan", command=fn_create_projects)
         button_insert_project.grid(row=0, column=0, padx=6, pady=6, sticky=tk.W)
-        button_clear_input = ttk.Button(group_buttons, text="Bersihkan", command=lambda: fn_clear_create_project_form(entry_project_name, entry_year, entry_capacity, entry_customer, entry_totals))
+        button_clear_input = ttk.Button(group_buttons, text="Bersihkan", command=lambda: command.fn_clear_entries(entry_project_name, entry_year, entry_capacity, entry_customer, entry_totals))
         button_clear_input.grid(row=0, column=1, sticky=tk.W)
 
         # Update proyek
@@ -112,18 +110,18 @@ def window_new_project(master, project_name=""):
         # Tombol opsi -> Edit BOM, SPP, PO
         group_buttons_update = tk.Frame(new_project)
         group_buttons_update.grid(row=4, column=0, columnspan=6, padx=10, sticky=tk.W)
-        button_update_project = ttk.Button(group_buttons_update, text="Update", command=fn_create_projects)
+        button_update_project = ttk.Button(group_buttons_update, text="Update")
         button_update_project.grid(row=0, column=0, padx=6, pady=6, sticky=tk.W)
-        button_clear_update = ttk.Button(group_buttons_update, text="Bersihkan", command=fn_clear_create_project_form)
+        button_clear_update = ttk.Button(group_buttons_update, text="Bersihkan", command=lambda: command.fn_clear_entries(entry_update_project_name, entry_update_year, entry_update_capacity, entry_update_customer, entry_update_totals))
         button_clear_update.grid(row=0, column=1, sticky=tk.W, padx=6)
-        button_remove_update = ttk.Button(group_buttons_update, text="Hapus", command=fn_clear_create_project_form)
+        button_remove_update = ttk.Button(group_buttons_update, text="Hapus")
         button_remove_update.grid(row=0, column=2, sticky=tk.W, padx=6)
         
-        button_edit_bom = ttk.Button(group_buttons_update, text="Edit PO", command=fn_clear_create_project_form)
+        button_edit_bom = ttk.Button(group_buttons_update, text="Edit PO")
         button_edit_bom.grid(row=0, column=3, sticky=tk.E, padx=6)
-        button_edit_bom = ttk.Button(group_buttons_update, text="Edit SPP", command=fn_clear_create_project_form)
+        button_edit_bom = ttk.Button(group_buttons_update, text="Edit SPP")
         button_edit_bom.grid(row=0, column=4, sticky=tk.E, padx=6)
-        button_edit_bom = ttk.Button(group_buttons_update, text="Edit BOM", command=fn_clear_create_project_form)
+        button_edit_bom = ttk.Button(group_buttons_update, text="Edit BOM")
         button_edit_bom.grid(row=0, column=5, sticky=tk.E, padx=6)
 
         # Listbox
@@ -135,8 +133,8 @@ def window_new_project(master, project_name=""):
         result_scrollbar.configure(command=listbox_result.yview)
 
         # Clear available inputs
-        fn_clear_create_project_form(entry_project_name, entry_year, entry_capacity, entry_customer, entry_totals)
-        fn_clear_create_project_form(entry_update_project_name, entry_update_year, entry_update_capacity, entry_update_customer, entry_update_totals)
+        command.fn_clear_entries(entry_project_name, entry_year, entry_capacity, entry_customer, entry_totals)
+        command.fn_clear_entries(entry_update_project_name, entry_update_year, entry_update_capacity, entry_update_customer, entry_update_totals)
         populate_list(listbox_result)
 
 def populate_list(parent_widget):
@@ -149,25 +147,3 @@ def fn_choose_image():
 
 def fn_create_projects():
         print("Added 1 row")
-
-def fn_clear_create_project_form(*entries):
-        temp_entries = list(entries)
-        for entry in temp_entries:
-                entry.delete(0, tk.END)
-
-def group_messages(parent, code=0):
-        MESSAGES = [
-            "Database berhasil dipilih",
-            "Berhasil menambahkan proyek baru",
-            "Berhasil mengupdate data proyek",
-            "Pencarian ditemukan",
-            "Pencarian tidak ditemukan",
-            "Database masih kosong"
-        ]
-        msg_selection = MESSAGES[0]
-
-        # Switch case
-
-        # Label -> messages
-        label_message = tk.Label(parent, text=msg_selection, fg="red", font=("Arial", 9))
-        label_message.grid(row=6, column=0)

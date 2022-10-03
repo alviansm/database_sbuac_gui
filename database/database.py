@@ -66,6 +66,16 @@ class Database:
             )'''
         )
         self.conn.commit()
+        self.cur.execute(
+            '''CREATE TABLE IF NOT EXISTS user_admin 
+            (
+            id INTEGER, 
+            username TEXT,
+            password TEXT, 
+            PRIMARY KEY (id)
+            )'''
+        )
+        self.conn.commit()
 
     # Fetch -> projects
     def fetch(self):
@@ -110,7 +120,6 @@ class Database:
             sql += ' AND project_name LIKE ?'
             params.append('%'+name+'%')
         tuple_params = tuple(params)
-        print("PARAMS: ", tuple_params)
         self.cur.execute(sql, tuple_params)
         rows = self.cur.fetchall()
         return rows

@@ -1,11 +1,15 @@
 import tkinter as tk
-from tkinter import HORIZONTAL, ttk
+from tkinter import ttk
 from tkinter import font
 from tkinter import messagebox
-from database.database import Database
-import gui.new_project as np
+from turtle import width
 from PIL import ImageTk, Image
-import os
+
+from database.database import Database
+import gui.new_windows.new_project as np
+import gui.new_windows.auth as auth
+import gui.commands.commands as command
+import gui.commands.convert_to_list as ctl
 
 db = Database("sbu_projects.db")
 # db.insert("Kereta Ukur HST", 2022, "40000", "PT KAI", 35, "./images/9q02ejo.png")
@@ -27,7 +31,7 @@ class Application(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.master = master
-        master.title('SBU AC Projects')
+        master.title('Monage')
         master.geometry("720x520")
         master.resizable(False, False)
         master.iconbitmap("./favicon.ico")
@@ -88,15 +92,14 @@ class Application(tk.Frame):
 
         # Pupulate List
         self.populate_list()
-
+        
     def create_widgets(self):
         self.group_title()
         self.group_search_by_year()
         self.group_data_update()
-        self.group_loading_bar()
         self.group_list_result()
-        self.group_messages(0)
         self.fn_clear_selection()
+        self.fn_group_button_options()
 
     # Menu commands
     def menu_commands(self):
@@ -106,6 +109,10 @@ class Application(tk.Frame):
         # File
         self.file_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
         self.app_menu.add_cascade(label="File", menu=self.file_menu)
+        self.file_menu.add_command(label="Autentikasi", command=lambda: auth.fn_window_authentication(self.master))
+        self.file_menu.add_separator()
+        self.file_menu.add_command(label="Impor dari Excel", command=lambda: ctl.fn_window_import_excel(self.master))
+        self.file_menu.add_separator()
         self.file_menu.add_command(label="Ekspor database", command=self.menu_commands)
         self.file_menu.add_command(label="Backup database", command=self.menu_commands)
         self.file_menu.add_command(label="Pilih database", command=self.menu_commands) 
@@ -139,7 +146,7 @@ class Application(tk.Frame):
     def group_title(self):
         # Judul
         self.frame_title = tk.Frame(self.master).grid(row=0, column=0)
-        self.label_tittle = tk.Label(self.frame_title, text="Database Proyek", font=("Verdana", 14)).grid(row=0, column=0)
+        self.label_tittle = tk.Label(self.frame_title, text="Database Proyek", font=("Verdana", 14)).grid(row=0, column=0, pady=6)
 
     def group_search_by_year(self):
         # Frame pencarian
@@ -175,7 +182,7 @@ class Application(tk.Frame):
 
     def group_data_update(self):
         # Frame update project
-        self.frame_data_update = tk.LabelFrame(self.master, text="Update", pady=5, padx=5, font=("Verdana Bold", 9))
+        self.frame_data_update = tk.LabelFrame(self.master, text="Preview", pady=5, padx=5, font=("Verdana Bold", 9))
         self.frame_data_update.grid(row=2, column=0, sticky=tk.W, pady=5, padx=17)
 
         # Entry nama proyek
@@ -208,23 +215,16 @@ class Application(tk.Frame):
         self.entry_project_units = tk.Entry(self.frame_data_update, textvariable=self.update_jumlah, font=("Arial", 11), width=12)
         self.entry_project_units.grid(row=0, column=5, pady=7)
 
-        # Tombol -> Bersihkan
-        self.button_clear_selection = ttk.Button(self.frame_data_update, text="Clear", command=self.fn_clear_selection)
-        self.button_clear_selection.grid(row=1, column=5, sticky=tk.E)
+    def fn_group_button_options(self):
+        self.group_button_options = tk.Frame(self.master)
+        self.group_button_options.grid(row=3, column=0, padx=20, pady=5, sticky=tk.W)
 
-        # Tombol -> Lebih lanjut & Update
-        self.button_more = ttk.Button(self.frame_data_update, text="BOM", command=self.show_more_bom)
-        self.button_more.grid(row=2, column=1, sticky=tk.W)
-        self.button_submit_update = ttk.Button(self.frame_data_update, text="Update", command=self.fn_update_project)
-        self.button_submit_update.grid(row=2, column=0)
-
-        # Tombol tampilkan gambar
-        self.button_show_image = ttk.Button(self.frame_data_update, text="Gambar", command=self.display_image)
-        self.button_show_image.grid(row=2, column=5)
-
-    def group_loading_bar(self):
-        self.progress_bar = ttk.Progressbar(self.master, orient=HORIZONTAL, length=520, mode="determinate")
-        self.progress_bar.grid(row=3, column=0, columnspan=2, pady=5)
+        self.button_clear = ttk.Button(self.group_button_options, text="Data Sheet")
+        self.button_clear.grid(row=0, column=0, sticky=tk.W)
+        self.button_show_bom = ttk.Button(self.group_button_options, text="Lihat BOM")
+        self.button_show_bom.grid(row=0, column=1, padx=12)
+        self.button_show_image = ttk.Button(self.group_button_options, text="Clear", command=lambda: command.fn_clear_entries(self.entry_project_name, self.entry_project_year, self.entry_project_capacity, self.entry_project_customer, self.entry_project_units))
+        self.button_show_image.grid(row=0, column=2, sticky=tk.E)
 
     def group_list_result(self):
         # Widget -> List (Untuk hasil fetch database)
@@ -238,70 +238,6 @@ class Application(tk.Frame):
 
         # Bind selection
         self.list_result.bind('<<ListboxSelect>>', self.select_item)
-
-    # Display messages (ToDos)
-    def group_messages(self, code):
-        self.MESSAGES = [
-            "Database berhasil dipilih",
-            "Berhasil menambahkan proyek baru",
-            "Berhasil mengupdate data proyek",
-            "Pencarian ditemukan",
-            "Pencarian tidak ditemukan",
-            "Database masih kosong"
-        ]
-        self.msg_selection = self.MESSAGES[0]
-
-        # Label -> messages
-        self.label_message = tk.Label(self.master, text=self.MESSAGES[1], fg="red", font=("Arial", 9))
-        self.label_message.grid(row=5, column=0)
-
-    # Functions 
-    def show_popup_about(self):
-        # Window -> about us configuration
-        self.about_us = tk.Toplevel(self.master)
-        self.about_us.title("Tentang Kami")
-        self.about_us.geometry("720x312")
-        self.about_us.resizable(False, False)
-        self.about_us.iconbitmap("./favicon.ico")
-
-        # Images -> PT IMS & Kampus Merdeka
-        self.image_ims = ImageTk.PhotoImage(Image.open("./assets/images/logo-ims.png"))
-        self.image_ims_label = tk.Label(self.about_us, image=self.image_ims).pack(pady=10)
-        self.image_msib = ImageTk.PhotoImage(Image.open("./assets/images/logo-msib.png"))
-        self.image_msib_label = tk.Label(self.about_us, image=self.image_msib).pack(pady=10)
-
-        # Keterangan
-        self.aboutus_titile = tk.Label(self.about_us, text="Tentang Kami", font=("Verdana bold", 14)).pack()
-        self.aboutus_version = tk.Label(self.about_us, text="Versi 0.1.0 (Beta)", font=("Arial bold", 11)).pack()
-        self.aboutus_description = tk.Label(self.about_us, text="Program ini dikembangkan untuk mempermudah pengelolaan ", font=("Arial", 11)).pack()
-        self.aboutus_description2 = tk.Label(self.about_us, text="data proyek yang ada di SBU AC PT IMS, secara open source di github", font=("Arial", 11)).pack()
-        self.aboutus_description2 = tk.Label(self.about_us, text="oleh peserta MSIB Batch 3 2022. Terima kasih!", font=("Arial", 11)).pack()
-
-    def show_more_bom(self):
-        # Window -> Konfigurasi edit BOM
-        self.window_bom = tk.Toplevel(self.master)
-        self.window_bom.title("Edit BOM")
-        self.window_bom.geometry("720x520")
-        self.window_bom.resizable(False, False)
-        self.window_bom.iconbitmap("./favicon.ico")
-
-        # Judul
-        self.title_window_bom = tk.Label(self.window_bom, text="Edit BOM", font=("Verdana", 14))
-        self.title_window_bom.grid(row=0, column=0)
-
-        # Frame entry
-        self.frame_edit_bom = tk.LabelFrame(self.window_bom, text="Update", pady=5, padx=5, font=("Verdana Bold", 9))
-        self.frame_edit_bom.grid(row=1, column=0)
-
-        # Entry kode BOM
-        self.label_bom_code = tk.Label(self.frame_edit_bom, text="Kode :", font=("Arial", 11))
-        self.label_bom_code.grid(row=0, column=0)
-
-        # Tombol -> Update, hapus, tambah, clear
-        # List BOM
-
-    def display_image(self):
-        pass
 
     # Populate database to list_result widget
     def populate_list(self):
@@ -369,3 +305,24 @@ class Application(tk.Frame):
         self.entry_project_customer.delete(0, tk.END)
         # jumlah
         self.entry_project_units.delete(0, tk.END)
+
+    def show_popup_about(self):
+        # Window -> about us configuration
+        self.about_us = tk.Toplevel(self.master)
+        self.about_us.title("Tentang Kami")
+        self.about_us.geometry("720x312")
+        self.about_us.resizable(False, False)
+        self.about_us.iconbitmap("./favicon.ico")
+
+        # Images -> PT IMS & Kampus Merdeka
+        self.image_ims = ImageTk.PhotoImage(Image.open("./assets/images/logo-ims.png"))
+        self.image_ims_label = tk.Label(self.about_us, image=self.image_ims).pack(pady=10)
+        self.image_msib = ImageTk.PhotoImage(Image.open("./assets/images/logo-msib.png"))
+        self.image_msib_label = tk.Label(self.about_us, image=self.image_msib).pack(pady=10)
+
+        # Keterangan
+        self.aboutus_titile = tk.Label(self.about_us, text="Tentang Kami", font=("Verdana bold", 14)).pack()
+        self.aboutus_version = tk.Label(self.about_us, text="Versi 0.1.0 (Beta)", font=("Arial bold", 11)).pack()
+        self.aboutus_description = tk.Label(self.about_us, text="Program ini dikembangkan untuk mempermudah pengelolaan ", font=("Arial", 11)).pack()
+        self.aboutus_description2 = tk.Label(self.about_us, text="data proyek yang ada di SBU AC PT IMS, secara open source di github", font=("Arial", 11)).pack()
+        self.aboutus_description2 = tk.Label(self.about_us, text="oleh peserta MSIB Batch 3 2022. Terima kasih!", font=("Arial", 11)).pack()
