@@ -13,7 +13,7 @@ class Database:
             capacity INTEGER, 
             customer TEXT, 
             totals INTEGER, 
-            image TEXT, 
+            image TEXT,
             bom_id INTEGER AUTO INCREMENT,
             PRIMARY KEY (id)
             )'''
@@ -28,11 +28,12 @@ class Database:
             deskripsi TEXT, 
             spesifikasi TEXT, 
             kuantitas INTEGER, 
-            satuan VARCHAR(12), 
+            satuan VARCHAR(12),
+            filepath TEXT, 
             project_id INTEGER, 
             spp_id INTEGER, 
             po_id INTEGER, 
-            keterangan BOOLEAN, 
+            keterangan BOOLEAN,
             PRIMARY KEY (id),
             FOREIGN KEY (project_id) REFERENCES projects(id)
             )'''
@@ -45,7 +46,8 @@ class Database:
             nomor TEXT, 
             kuantitas DOUBLE, 
             satuan VARCHAR(12), 
-            status BOOLEAN, 
+            status BOOLEAN,
+            filepath TEXT, 
             bom_id INTEGER, 
             po_id INTEGER,
             PRIMARY KEY (id)
@@ -57,9 +59,11 @@ class Database:
             (
             id INTEGER, 
             nomor TEXT, 
-            kuantitas DOUBLE, satuan VARCHAR(12), 
+            kuantitas DOUBLE, 
+            satuan VARCHAR(12), 
             kode TEXT, 
-            tanggal_kedatangan DATETIME, 
+            tanggal_kedatangan DATETIME,
+            filepath TEXT, 
             bom_id INTEGER, 
             spp_id INTEGER, 
             PRIMARY KEY (id)
@@ -82,10 +86,23 @@ class Database:
         self.cur.execute('''SELECT id, project_name, year, capacity, customer, totals FROM projects''')
         rows = self.cur.fetchall()  
         return rows
+    # Fetch -> BOM
+    def fetch_view_bom(self, project_id):
+        self.cur.execute('''SELECT id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan FROM bom WHERE project_id = ?''', (project_id,))
+        rows = self.cur.fetchall()
+        return rows
+    # Fetch -> SPP
+    # Fetch -> PO
 
     # Insert -> projects
     def insert(self, project_name, year, capacity, customer, totals, image):
         self.cur.execute("INSERT INTO projects VALUES (NULL, ?, ?, ?, ?, ?, ?, NULL)", (project_name, year, capacity, customer, totals, image))
+        self.conn.commit()
+
+    # Insert bom -> bom (id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, filepath, project_id, spp_id, po_id, keterangan)
+    def insert_bom(self, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, project_id, keterangan):
+        self.cur.execute('''INSERT INTO bom VALUES (NULL, ?, ?, ?, ?, ?, ?, NULL, ?, NULL, NULL, ?)''',
+        (rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, project_id, keterangan))
         self.conn.commit()
 
     # Remove -> projects

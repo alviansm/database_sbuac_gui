@@ -10,6 +10,7 @@ import gui.new_windows.new_project as np
 import gui.new_windows.auth as auth
 import gui.commands.commands as command
 import gui.commands.convert_to_list as ctl
+import gui.new_windows.lihat_bom as lb
 
 db = Database("sbu_projects.db")
 # db.insert("Kereta Ukur HST", 2022, "40000", "PT KAI", 35, "./images/9q02ejo.png")
@@ -26,6 +27,9 @@ db = Database("sbu_projects.db")
 # db.insert("ACI 1803", 2022, "18000", "KAI", 80, "./images/9q02ejo.png")
 # db.insert("ACI 0501", 2022, "5000", "KAI", 1, "./images/9q02ejo.png")
 # db.insert("ACI 1803", 2022, "18000", "KAI", 10, "./images/9q02ejo.png")
+# db.insert_bom("c", "123qwe", "kompresor", "emerson", 10, "unit", 1, 0)
+# db.insert_bom("c", "bxc123", "fan", "ziehl", 5, "kg", 1, 0)
+# db.insert_bom("c", "zxcl", "coil evap", "sanjaya", 20, "kg", 1, 0)
 
 class Application(tk.Frame):
     def __init__(self, master):
@@ -57,6 +61,8 @@ class Application(tk.Frame):
 
         # INPUT VARIABLES
         # Search Group
+        # id
+        self.selected_project_id = 0
         # tahun
         self.search_year = tk.StringVar()
         self.search_year.set(self.Y_OPTIONS[0]) # "2022"
@@ -109,8 +115,6 @@ class Application(tk.Frame):
         # File
         self.file_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
         self.app_menu.add_cascade(label="File", menu=self.file_menu)
-        self.file_menu.add_command(label="Autentikasi", command=lambda: auth.fn_window_authentication(self.master))
-        self.file_menu.add_separator()
         self.file_menu.add_command(label="Impor dari Excel", command=lambda: ctl.fn_window_import_excel(self.master))
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Ekspor database", command=self.menu_commands)
@@ -127,6 +131,7 @@ class Application(tk.Frame):
         self.tambah_menu.add_command(label="Proyek Baru", command=lambda: np.window_new_project(self.master))
         self.tambah_menu.add_command(label="Edit BOM", command=self.menu_commands)
         self.tambah_menu.add_command(label="Edit SPP", command=self.menu_commands)
+        self.tambah_menu.add_command(label="Edit PO", command=self.menu_commands)
 
         # Ekspor
         self.export_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
@@ -134,6 +139,16 @@ class Application(tk.Frame):
         self.export_menu.add_command(label="Sebagai Excel", command=self.menu_commands)
         self.export_menu.add_command(label="Sebagai CSV", command=self.menu_commands)
         self.export_menu.add_command(label="Sebaga PDF", command=self.menu_commands)
+
+        # Autentikasi
+        self.auth_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
+        self.app_menu.add_cascade(label="Autentikasi", menu=self.auth_menu)
+        self.auth_menu.add_command(label="Login", command=lambda: auth.fn_window_authentication(self.master))
+        self.auth_menu.add_command(label="Buat Akun", command=self.menu_commands)
+        self.auth_menu.add_separator()
+        self.auth_menu.add_command(label="Pengaturan Akun", command=self.menu_commands)
+        self.auth_menu.add_separator()
+        self.auth_menu.add_command(label="Sign Out", command=self.menu_commands)
 
         # Petunjuk
         self.bantuan_menu = tk.Menu(self.app_menu, font=("Arial", 11), tearoff=False)
@@ -221,10 +236,12 @@ class Application(tk.Frame):
 
         self.button_clear = ttk.Button(self.group_button_options, text="Data Sheet")
         self.button_clear.grid(row=0, column=0, sticky=tk.W)
-        self.button_show_bom = ttk.Button(self.group_button_options, text="Lihat BOM")
+        self.button_show_bom = ttk.Button(self.group_button_options, text="Lihat BOM", command=lambda: lb.window_lihat_bom(self.master, project_id=self.selected_project_id, project_name=self.update_nama))
         self.button_show_bom.grid(row=0, column=1, padx=12)
         self.button_show_image = ttk.Button(self.group_button_options, text="Clear", command=lambda: command.fn_clear_entries(self.entry_project_name, self.entry_project_year, self.entry_project_capacity, self.entry_project_customer, self.entry_project_units))
         self.button_show_image.grid(row=0, column=2, sticky=tk.E)
+        self.button_show_image = ttk.Button(self.group_button_options, text="Refresh", command=self.populate_list)
+        self.button_show_image.grid(row=0, column=3, padx=12, sticky=tk.E)
 
     def group_list_result(self):
         # Widget -> List (Untuk hasil fetch database)
@@ -264,8 +281,7 @@ class Application(tk.Frame):
     def select_item(self, event):
         try:
             index = self.list_result.curselection()[0]
-            self.selected_project = self.list_result.get(index)
-
+            self.selected_project = self.list_result.get(index)            
             # nama proyek
             self.entry_project_name.delete(0, tk.END)
             self.entry_project_name.insert(tk.END, self.selected_project[1])
@@ -281,6 +297,9 @@ class Application(tk.Frame):
             # jumlah
             self.entry_project_units.delete(0, tk.END)
             self.entry_project_units.insert(tk.END, self.selected_project[5])
+            # project id
+            self.selected_project_id = self.selected_project[0]
+            self.update_nama = self.entry_project_name.get()
         except IndexError:
             pass
 
