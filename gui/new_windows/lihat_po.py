@@ -26,7 +26,13 @@ def window_lihat_po(master, project_name=""):
         "sausage"
     ]
 
-    select_item = []
+    def select_item(event):
+        try:
+                index = list_result.curselection()[0]
+                selected_project = list_result.get(index)
+                
+        except IndexError:
+                pass
 
     # ===VARIABLES===
     input_material_nomor = tk.StringVar()

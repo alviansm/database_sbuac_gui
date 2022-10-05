@@ -13,23 +13,6 @@ import gui.commands.convert_to_list as ctl
 import gui.new_windows.lihat_bom as lb
 
 db = Database("sbu_projects.db")
-# db.insert("Kereta Ukur HST", 2022, "40000", "PT KAI", 35, "./images/9q02ejo.png")
-# db.insert("ACI 2501", 2022, "25000", "KTMB", 7, "./images/9q02ejo.png")
-# db.insert("ACI 0802", 2022, "8000", "PNR", 6, "./images/9q02ejo.png")
-# db.insert("ACI 4003", 2022, "40000", "PNR", 22, "./images/9q02ejo.png")
-# db.insert("ACI 4201", 2022, "42000", "PNR", 10, "./images/9q02ejo.png")
-# db.insert("ACI 4202", 2022, "42000", "PNR", 15, "./images/9q02ejo.png")
-# db.insert("ACI 4501", 2022, "45000", "PNR", 15, "./images/9q02ejo.png")
-# db.insert("ACI 0801", 2022, "8000", "KAI", 39, "./images/9q02ejo.png")
-# db.insert("ACI 1803", 2022, "18000", "KAI", 476, "./images/9q02ejo.png")
-# db.insert("ACI 2503", 2022, "25000", "KAI", 80, "./images/9q02ejo.png")
-# db.insert("ACI 4001, 4002, 4003", 2022, "40000", "KAI", 697, "./images/9q02ejo.png")
-# db.insert("ACI 1803", 2022, "18000", "KAI", 80, "./images/9q02ejo.png")
-# db.insert("ACI 0501", 2022, "5000", "KAI", 1, "./images/9q02ejo.png")
-# db.insert("ACI 1803", 2022, "18000", "KAI", 10, "./images/9q02ejo.png")
-# db.insert_bom("c", "123qwe", "kompresor", "emerson", 10, "unit", 1, 0)
-# db.insert_bom("c", "bxc123", "fan", "ziehl", 5, "kg", 1, 0)
-# db.insert_bom("c", "zxcl", "coil evap", "sanjaya", 20, "kg", 1, 0)
 
 class Application(tk.Frame):
     def __init__(self, master):

@@ -1,10 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
 from database.database import Database
+import gui.commands.commands as commands
 
 db = Database("sbu_projects.db")
 
-def window_lihat_spp(master, project_name=""):
+def window_lihat_spp(master, bom_id=0, spp_bom_id=0, project_name=""):
     # WINDOW -> konfigurasi window proyek baru
     lihat_po = tk.Toplevel(master)
     lihat_po.title("Review SPP")
@@ -12,33 +13,53 @@ def window_lihat_spp(master, project_name=""):
     lihat_po.resizable(False, False)
     lihat_po.iconbitmap("./favicon.ico")
 
-    QUANTITY_OPTIONS = [
-        "unit",
-        "unit",
-        "pcs",
-        "meter",
-        "tabung",
-        "roll",
-        "lembar",
-        "batang",
-        "kg",
-        "pack",
-        "sausage"
-    ]
-
-    select_item = []
-
     # ===VARIABLES===
     input_material_nomor = tk.StringVar()
     input_material_kuantitas = tk.StringVar()
     input_bom_code = tk.StringVar()
     input_material_deskripsi = tk.StringVar()
-    input_satuan = tk.IntVar()
-    input_satuan.set(QUANTITY_OPTIONS[0])
+    input_material_spesifikasi = tk.StringVar()
+    input_satuan = tk.StringVar()
 
     input_cari_kode = tk.StringVar()
     input_cari_deskripsi = tk.StringVar()
     input_cari_spec = tk.StringVar()
+
+    # ===FUNCTIONS===
+    def fn_clear_selection():
+        entry_material_nomor.delete(0, tk.END)
+        entry_material_code.delete(0, tk.END)
+        entry_material_deskripsi.delete(0, tk.END)
+        entry_material_spesifikasi.delete(0, tk.END)
+        entry_kuantitas.delete(0, tk.END)
+        entry_satuan.delete("1.0", "end")
+
+    def select_item(event):
+        try:
+            index = list_result.curselection()[0]
+            selected_project = list_result.get(index)
+
+            # nomor
+            entry_material_nomor.delete(0, tk.END)
+            entry_material_nomor.insert(tk.END, selected_project[4])
+            # kode bom -> bom
+            entry_material_code.delete(0, tk.END)
+            entry_material_code.insert(tk.END, selected_project[1])
+            # deskripsi -> bom
+            entry_material_deskripsi.delete(0, tk.END)
+            entry_material_deskripsi.insert(tk.END, selected_project[2])
+            # spesifikasi
+            entry_material_spesifikasi.delete(0, tk.END)
+            entry_material_spesifikasi.insert(tk.END, selected_project[3])
+            # kuantitas
+            entry_kuantitas.delete(0, tk.END)
+            entry_kuantitas.insert(tk.END, selected_project[5])
+            # unit
+            input_satuan = selected_project[6]
+            entry_satuan.delete("1.0", "end")
+            entry_satuan.insert(tk.END, input_satuan)
+        except IndexError:
+            pass           
 
     # ===WIDGETS===
     # JUDUL
@@ -90,7 +111,7 @@ def window_lihat_spp(master, project_name=""):
     entry_kuantitas = tk.Entry(group_insert, textvariable=input_material_kuantitas, font=("Arial", 11), width=12)
     entry_kuantitas.grid(row=0, column=5, padx=12)
     # satuan
-    entry_satuan = ttk.OptionMenu(group_insert, input_satuan, *QUANTITY_OPTIONS)
+    entry_satuan = tk.Text(group_insert, height=1, width=4)
     entry_satuan.grid(row=1, column=4, columnspan=2, padx=3)
     # kode material
     label_material_code = tk.Label(group_insert, text="Kode BOM : ", font=("Arial", 11))
@@ -102,15 +123,23 @@ def window_lihat_spp(master, project_name=""):
     label_material_deskripsi.grid(row=0, column=2, padx=12, sticky=tk.E, pady=3)
     entry_material_deskripsi = tk.Entry(group_insert, textvariable=input_material_deskripsi, font=("Arial", 11), width=12)
     entry_material_deskripsi.grid(row=0, column=3, padx=3)  
+    # spesifikasi
+    label_material_spesifikasi = tk.Label(group_insert, text="Spesifikasi : ", font=("Arial", 11))
+    label_material_spesifikasi.grid(row=1, column=2, padx=12, sticky=tk.E, pady=3)
+    entry_material_spesifikasi = tk.Entry(group_insert, textvariable=input_material_spesifikasi, font=("Arial", 11), width=12)
+    entry_material_spesifikasi.grid(row=1, column=3, padx=3)
     # GROUP BUTTON REVIEW MATERIAL
     group_button_review = tk.Frame(lihat_po)
     group_button_review.grid(row=5, column=0, columnspan=6, pady=3, padx=12, sticky=tk.E)
     # clear
-    button_clear = ttk.Button(group_button_review, text="Clear")
+    button_clear = ttk.Button(group_button_review, text="Clear", command=fn_clear_selection)
     button_clear.grid(row=0, column=0, padx=3)
+    # refresh
+    button_update = ttk.Button(group_button_review, text="Refresh")
+    button_update.grid(row=0, column=1, padx=3)
     # data sheet
     button_datasheet = ttk.Button(group_button_review, text="Data Sheet")
-    button_datasheet.grid(row=0, column=1, padx=3)
+    button_datasheet.grid(row=0, column=2, padx=3)
     # LISTBOX
     list_result = tk.Listbox(lihat_po, height=12, width=82, border=1)
     list_result.grid(row=6, column=0, columnspan=6, pady=5)
@@ -119,5 +148,7 @@ def window_lihat_spp(master, project_name=""):
     list_result.configure(yscrollcommand=scrollbar.set)
     scrollbar.configure(command=list_result.yview)
 
+    # Populate to Listbox
+    commands.populate_view_spp(list_result, bom_id, spp_bom_id)
     # Bind selection
     list_result.bind('<<ListboxSelect>>', select_item)

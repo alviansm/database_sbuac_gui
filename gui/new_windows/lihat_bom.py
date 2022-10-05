@@ -41,6 +41,7 @@ def window_lihat_bom(master, project_id=0, project_name=""):
         entry_kuantitas.delete(0, tk.END)
         entry_satuan.delete("1.0", "end")
         entry_keterangan.delete(0, tk.END)
+        
     def select_item(event):
         try:
             index = list_result.curselection()[0]
@@ -81,7 +82,7 @@ def window_lihat_bom(master, project_id=0, project_name=""):
             title = tk.Label(lihat_bom, text="Review BOM", pady=4, padx=4, font=("Verdana bold", 12))
             title.grid(row=0, column=0, columnspan=6)        
     else:
-            title = tk.Label(lihat_bom, text="BOM : Proyek " + project_name, pady=4, padx=4, font=("Verdana bold", 12))
+            title = tk.Label(lihat_bom, text="BOM : Proyek " + str(project_name), pady=4, padx=4, font=("Verdana bold", 12))
             title.grid(row=0, column=0, columnspan=6)
     # GROUP -> Pencarian
     group_search = tk.LabelFrame(lihat_bom, text="Cari Material", font=("Verdana bold", 9))
@@ -154,7 +155,7 @@ def window_lihat_bom(master, project_id=0, project_name=""):
     button_clear = ttk.Button(group_button_review, text="Clear", command=fn_clear_view_bom)
     button_clear.grid(row=0, column=0, padx=3)
     # lihat spp
-    button_lihat_spp = ttk.Button(group_button_review, text="Lihat SPP", command=lambda: ls.window_lihat_spp(master))
+    button_lihat_spp = ttk.Button(group_button_review, text="Lihat SPP", command=lambda: ls.window_lihat_spp(master, project_id, project_id))
     button_lihat_spp.grid(row=0, column=1, padx=3)
     # lihat po
     button_lihat_po = ttk.Button(group_button_review, text="Lihat PO", command=lambda: lp.window_lihat_po(master))
