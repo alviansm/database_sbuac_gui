@@ -101,21 +101,40 @@ class Database:
             values = [row[0], row[2], row[3], row[4], row[11], row[12], row[13], row[14]]
             temp_tuple = tuple(values)
             result_rows.append(temp_tuple)
-        print("ROWS: ", result_rows)
         return result_rows
     # Fetch -> PO
-    def fetch_view_po(self, project_id):
-        self.cur.execute('''SELECT id, nomor, kuantitas, satuan, kode, tanggal_kedatangan FROM po WHERE project_id = ?''', (project_id))
+    def fetch_view_po(self, bom_id, spp_bom_id):
+        self.cur.execute('''SELECT * FROM bom AS a INNER JOIN po AS b ON (a.id = ? AND b.bom_id = ?)''', (bom_id, spp_bom_id))
         rows = self.cur.fetchall()
-        return rows
+        result_rows = []
+        for row in rows:
+            # kode bom, kode, kuantitas, nomor, deskripsi, tanggal, spesifikasi, satuan
+            values = [
+                row[0], # id
+                row[2], # kode_bom
+                row[14], # kode
+                row[12], # kuantitas
+                row[11], # nomor
+                row[3], # deskripsi
+                row[15], # tanggal
+                row[4], # spesifikasi
+                row[13] # satuan
+            ]
+            temp_tuple = tuple(values)
+            result_rows.append(temp_tuple)
+        return result_rows
     # Fetch -> Overall bom for export feature
     def fetch_all_bom(self, project_id):
         pass
+    def select_project_image(self, project_id):
+        self.cur.execute("SELECT image FROM projects WHERE id=?", (project_id,))
+        rows = self.cur.fetchall()
+        return rows
 
     # INSERT
     # Insert -> projects
     def insert(self, project_name, year, capacity, customer, totals, image):
-        self.cur.execute("INSERT INTO projects VALUES (NULL, ?, ?, ?, ?, ?, ?, NULL)", (project_name, year, capacity, customer, totals, image))
+        self.cur.execute("INSERT INTO projects VALUES (NULL, ?, ?, ?, ?, ?, ?)", (project_name, year, capacity, customer, totals, image,))
         self.conn.commit()
     # Insert bom -> bom (id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, filepath, project_id, spp_id, po_id, keterangan)
     def insert_bom(self, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, project_id, keterangan):
@@ -151,9 +170,14 @@ class Database:
         self.conn.commit()
 
     # UPDATE ROW
-    # Update -> projects
+    # Update -> projects    
     def update(self, id, project_name, year, capacity, customer, totals):
         self.cur.execute("UPDATE projects SET project_name=?, year=?, capacity=?, customer=?, totals=? WHERE id=?", (project_name, year, capacity, customer, totals, id))
+        self.conn.commit()
+    def update_project_filename(self, filepath, project_id):
+        self.cur.execute('''
+                UPDATE projects SET image=? WHERE id=?
+            ''', (filepath, project_id))
         self.conn.commit()
 
     # SEARCH
@@ -180,6 +204,12 @@ class Database:
             params.append('%'+name+'%')
         tuple_params = tuple(params)
         self.cur.execute(sql, tuple_params)
+        rows = self.cur.fetchall()
+        return rows
+    # Query projects -> id, project_name -> importing selection
+    def query_for_importing(self):
+        sql = '''SELECT id, project_name FROM projects'''
+        self.cur.execute(sql)
         rows = self.cur.fetchall()
         return rows
 

@@ -63,12 +63,8 @@ def window_lihat_bom(master, project_id=0, project_name=""):
             entry_kuantitas.delete(0, tk.END)
             entry_kuantitas.insert(tk.END, selected_project[5])
             # keterangan
-            if selected_project[7] == 0:
-                input_stok = "Stok tidak ada"
-            if selected_project[7] == 1:
-                input_stok = "Stok ada"
             entry_keterangan.delete(0, tk.END)
-            entry_keterangan.insert(tk.END, input_stok)
+            entry_keterangan.insert(tk.END, selected_project[7])
             # unit
             input_satuan = selected_project[6]
             entry_satuan.delete("1.0", "end")
@@ -158,7 +154,7 @@ def window_lihat_bom(master, project_id=0, project_name=""):
     button_lihat_spp = ttk.Button(group_button_review, text="Lihat SPP", command=lambda: ls.window_lihat_spp(master, project_id, project_id))
     button_lihat_spp.grid(row=0, column=1, padx=3)
     # lihat po
-    button_lihat_po = ttk.Button(group_button_review, text="Lihat PO", command=lambda: lp.window_lihat_po(master))
+    button_lihat_po = ttk.Button(group_button_review, text="Lihat PO", command=lambda: lp.window_lihat_po(master, project_id, project_id))
     button_lihat_po.grid(row=0, column=2, padx=3)
     # data sheet
     button_datasheet = ttk.Button(group_button_review, text="Data Sheet")

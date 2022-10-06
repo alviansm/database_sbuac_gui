@@ -4,6 +4,7 @@ from tkinter import font
 from tkinter import messagebox
 from turtle import width
 from PIL import ImageTk, Image
+import subprocess, os, platform
 
 from database.database import Database
 import gui.new_windows.new_project as np
@@ -14,11 +15,18 @@ import gui.new_windows.lihat_bom as lb
 
 db = Database("sbu_projects.db")
 
+# bom
+# db.insert_bom("c", "CXY41", "Kompresor Super", "Emerson C41", 20, "unit", 2, 0)
+# spp
+# db.insert_spp("SBUAC/2021/OK", 20, "unit", 0, 1, 2)
+# po
+# db.insert_po("SBUAC/MNTP/", 20, "unit", "ZXCRUST", "20/12/2022", 1, 2)
+
 class Application(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.master = master
-        master.title('Monage')
+        master.title('OK!')
         master.geometry("720x520")
         master.resizable(False, False)
         master.iconbitmap("./favicon.ico")
@@ -217,7 +225,7 @@ class Application(tk.Frame):
         self.group_button_options = tk.Frame(self.master)
         self.group_button_options.grid(row=3, column=0, padx=20, pady=5, sticky=tk.W)
 
-        self.button_clear = ttk.Button(self.group_button_options, text="Data Sheet")
+        self.button_clear = ttk.Button(self.group_button_options, text="Data Sheet", command=lambda: self.preview_file(self.selected_project[0]))
         self.button_clear.grid(row=0, column=0, sticky=tk.W)
         self.button_show_bom = ttk.Button(self.group_button_options, text="Lihat BOM", command=lambda: lb.window_lihat_bom(self.master, project_id=self.selected_project_id, project_name=self.update_nama))
         self.button_show_bom.grid(row=0, column=1, padx=12)
@@ -290,6 +298,16 @@ class Application(tk.Frame):
         db.remove(self.selected_project[0])
         self.fn_clear_selection()
         self.populate_list()
+
+    def preview_file(self, project_id):        
+        self.filepath = db.select_project_image(project_id)
+        if platform.system() == "Darwin":
+            subprocess.call(('open', self.filepath[0][0]))
+        elif platform.system() == "Windows":
+            os.startfile(self.filepath[0][0])
+        else:
+            subprocess.call(('xdg-open', self.filepath[0][0]))
+
 
     def fn_update_project(self):
         db.update(self.selected_project[0], self.update_nama.get(), self.update_tahun.get(), self.update_kapasitas.get(), self.update_customer.get(), self.update_jumlah.get())
