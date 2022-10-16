@@ -91,6 +91,11 @@ class Database:
         self.cur.execute('''SELECT id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan FROM bom WHERE project_id = ?''', (project_id,))
         rows = self.cur.fetchall()
         return rows
+    # Fetch bom datasheet
+    def fetch_view_bom_datasheet(self, kode_material):
+        self.cur.execute('''SELECT filepath FROM bom WHERE kode_material=?''', (kode_material,))
+        row = self.cur.fetchone()
+        return row
     # Fetch -> SPP
     def fetch_view_spp(self, bom_id, spp_bom_id):
         self.cur.execute('''SELECT * FROM bom AS a INNER JOIN spp AS b ON (a.id = ? AND b.bom_id = ?)''', (bom_id, spp_bom_id))
@@ -166,7 +171,7 @@ class Database:
 
     # Remove -> projects
     def remove(self, id):
-        self.cur.execute("DELETE FROM projets WHERE id=?", (id,))
+        self.cur.execute("DELETE FROM projects WHERE id=?", (id,))
         self.conn.commit()
 
     # UPDATE ROW
@@ -178,6 +183,29 @@ class Database:
         self.cur.execute('''
                 UPDATE projects SET image=? WHERE id=?
             ''', (filepath, project_id))
+        self.conn.commit()
+    # Update -> BOM
+    def update_bom(self, id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan):
+        sql = "UPDATE bom SET rev=?, kode_material=?, deskripsi=?, spesifikasi=?, kuantitas=?, satuan=?, keterangan=? WHERE id=?"
+        variables = (rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan, id)
+        self.cur.execute(sql, variables)
+        self.conn.commit()
+    def update_bom_filename(self, filepath, project_id):
+        self.cur.execute('''
+                UPDATE bom SET filepath=? WHERE id=?
+            ''', (filepath, project_id))
+        self.conn.commit()
+    # Update -> SPP
+    def update_spp(self, id, nomor, kuantitas, satuan, status):
+        sql = "UPDATE spp SET nomor=?, kuantitas=?, satuan=?, status=? WHERE id=?"
+        variables = (nomor, kuantitas, satuan, status, id)
+        self.cur.execute(sql, variables)
+        self.conn.commit()
+    # Update -> PO
+    def update_po(self, id, nomor, kuantitas, satuan, kode, tanggal_kedatangan):
+        sql = "UPDATE po SET nomor=?, kuantitas=?, satuan=?, kode=?, tanggal_kedatangan=? WHERE id=?"
+        variables = (nomor, kuantitas, satuan, kode, tanggal_kedatangan, id)
+        self.cur.execute(sql, variables)
         self.conn.commit()
 
     # SEARCH

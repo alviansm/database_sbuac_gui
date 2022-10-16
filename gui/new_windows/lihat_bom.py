@@ -32,6 +32,8 @@ def window_lihat_bom(master, project_id=0, project_name=""):
     input_cari_deskripsi = tk.StringVar()
     input_cari_spec = tk.StringVar()
 
+    project_id = project_id
+
     # ===FUNCTIONS===
     def fn_clear_view_bom():
         entry_material_rev.delete(0, tk.END)
@@ -43,34 +45,45 @@ def window_lihat_bom(master, project_id=0, project_name=""):
         entry_keterangan.delete(0, tk.END)
         
     def select_item(event):
-        try:
-            index = list_result.curselection()[0]
-            selected_project = list_result.get(index)
-            
-            # rev
+        try:            
+            selected = treeview_result.selection()[0]
+            values = treeview_result.item(selected, 'values')
+            # ID    
+            global project_id
+            project_id = values[0]        
+            # Rev
             entry_material_rev.delete(0, tk.END)
-            entry_material_rev.insert(tk.END, selected_project[1])
-            # kodebom
+            entry_material_rev.insert(tk.END, values[1])
+            # Kode material
             entry_material_code.delete(0, tk.END)
-            entry_material_code.insert(tk.END, selected_project[2])
-            # deskripsi
-            entry_deskripsi.delete(0, tk.END)
-            entry_deskripsi.insert(tk.END, selected_project[3])
-            # spesifikasi
-            entry_spesifikasi.delete(0, tk.END)
-            entry_spesifikasi.insert(tk.END, selected_project[4])
-            # jumlah
-            entry_kuantitas.delete(0, tk.END)
-            entry_kuantitas.insert(tk.END, selected_project[5])
-            # keterangan
+            entry_material_code.insert(tk.END, values[2])
+            # Stok Material
             entry_keterangan.delete(0, tk.END)
-            entry_keterangan.insert(tk.END, selected_project[7])
-            # unit
-            input_satuan = selected_project[6]
+            entry_keterangan.insert(tk.END, values[3])
+            # Deskripsi
+            entry_deskripsi.delete(0, tk.END)
+            entry_deskripsi.insert(tk.END, values[4])
+            # Spesifikasi
+            entry_spesifikasi.delete(0, tk.END)
+            entry_spesifikasi.insert(tk.END, values[5])
+            # Kuantitas
+            entry_kuantitas.delete(0, tk.END)
+            entry_kuantitas.insert(tk.END, values[6])
+            # Unit
             entry_satuan.delete("1.0", "end")
-            entry_satuan.insert(tk.END, input_satuan)
+            entry_satuan.insert(tk.END, values[7])
         except IndexError:
             pass
+    
+    def clear_treeview_bom():
+        for record in treeview_result.get_children():
+            treeview_result.delete(record)
+
+    def populate_treeview_bom(project_id):
+        clear_treeview_bom()
+        for row in db.fetch_view_bom(project_id):
+            treeview_result.insert(parent="", index=row[0], iid=row[0], values=(row[0], row[1], row[2], row[7], row[3], row[4], row[5], row[6]))
+
 
     # ===WIDGETS===
     # JUDUL
@@ -159,13 +172,47 @@ def window_lihat_bom(master, project_id=0, project_name=""):
     # data sheet
     button_datasheet = ttk.Button(group_button_review, text="Data Sheet")
     button_datasheet.grid(row=0, column=3, padx=3)
+    # label message
+    if project_id == 0:
+        label_message = tk.Label(lihat_bom, text="Silahkan pilih proyek dengan mengklik baris proyek pada tabel", font=("Verdana bold", 9), fg="red")
+        label_message.grid(row=7, column=0, columnspan=6, pady=2)
     # LISTBOX
-    list_result = tk.Listbox(lihat_bom, height=12, width=82, border=1)
-    list_result.grid(row=6, column=0, columnspan=6, pady=5)
-    scrollbar = tk.Scrollbar(lihat_bom)
-    scrollbar.grid(row=6, column=0, columnspan=6, padx=13, sticky=tk.E)
-    list_result.configure(yscrollcommand=scrollbar.set)
-    scrollbar.configure(command=list_result.yview)
+    # list_result = tk.Listbox(lihat_bom, height=12, width=82, border=1)
+    # list_result.grid(row=6, column=0, columnspan=6, pady=5)
+    # scrollbar = tk.Scrollbar(lihat_bom)
+    # scrollbar.grid(row=6, column=0, columnspan=6, padx=13, sticky=tk.E)
+    # list_result.configure(yscrollcommand=scrollbar.set)
+    # scrollbar.configure(command=list_result.yview)
     
-    commands.populate_view_bom(list_result, project_id)
-    list_result.bind('<<ListboxSelect>>', select_item)
+    # Treeview
+    treeview_result = ttk.Treeview(lihat_bom, height=8)
+    
+    # Column declaration
+    treeview_result['columns'] = ("ID", "Rev", "Kode Material", "Stok Material", "Deskripsi", "Spesifikasi", "Kuantitas", "Unit")
+    treeview_result.column("#0", anchor=tk.CENTER, width=0)
+    treeview_result.column("ID", anchor=tk.CENTER, width=45)        
+    treeview_result.column("Rev", anchor=tk.CENTER, width=45)
+    treeview_result.column("Kode Material", anchor=tk.CENTER, width=90)
+    treeview_result.column("Stok Material", anchor=tk.CENTER, width=110)
+    treeview_result.column("Deskripsi", anchor=tk.CENTER, width=140)
+    treeview_result.column("Spesifikasi", anchor=tk.CENTER, width=140)
+    treeview_result.column("Kuantitas", anchor=tk.CENTER, width=60)
+    treeview_result.column("Unit", anchor=tk.CENTER, width=60)
+    # Heading declaration
+    treeview_result.heading("#0", text="", anchor=tk.CENTER)
+    treeview_result.heading("ID", text="ID", anchor=tk.CENTER)
+    treeview_result.heading("Rev", text="Rev", anchor=tk.CENTER)
+    treeview_result.heading("Kode Material", text="Kode Material", anchor=tk.CENTER)
+    treeview_result.heading("Stok Material", text="Stok Material", anchor=tk.CENTER)
+    treeview_result.heading("Deskripsi", text="Deskripsi", anchor=tk.CENTER)
+    treeview_result.heading("Spesifikasi", text="Spesifikasi", anchor=tk.CENTER)
+    treeview_result.heading("Kuantitas", text="Kuantitas", anchor=tk.CENTER)
+    treeview_result.heading("Unit", text="Unit", anchor=tk.CENTER)
+    
+    treeview_result.grid(row=6, column=0, padx=11, pady=6)
+    treeview_result.bind("<<TreeviewSelect>>", select_item)
+
+    # commands.populate_view_bom(treeview_result, project_id)
+    # list_result.bind('<<ListboxSelect>>', select_item)
+
+    populate_treeview_bom(project_id)

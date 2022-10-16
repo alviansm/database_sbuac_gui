@@ -20,6 +20,7 @@ def window_lihat_spp(master, bom_id=0, spp_bom_id=0, project_name=""):
     input_material_deskripsi = tk.StringVar()
     input_material_spesifikasi = tk.StringVar()
     input_satuan = tk.StringVar()
+    input_keterangan = tk.StringVar()
 
     input_cari_kode = tk.StringVar()
     input_cari_deskripsi = tk.StringVar()
@@ -34,30 +35,47 @@ def window_lihat_spp(master, bom_id=0, spp_bom_id=0, project_name=""):
         entry_kuantitas.delete(0, tk.END)
         entry_satuan.delete("1.0", "end")
 
+    def clear_treeview_spp():
+        for record in treeview_result.get_children():
+            treeview_result.delete(record)
+
+    def populate_treeview_spp(x, y):
+        clear_treeview_spp()
+        i = 0
+        for row in db.fetch_view_spp(x, y):
+            treeview_result.insert(parent="", index=i, iid=i, values=(row[0], row[4], row[1], row[2], row[3], row[5], row[6], row[7]))
+            i = i + 1
+
     def select_item(event):
         try:
-            index = list_result.curselection()[0]
-            selected_project = list_result.get(index)
-
+            selected = treeview_result.selection()[0]
+            values = treeview_result.item(selected, 'values')
             # nomor
             entry_material_nomor.delete(0, tk.END)
-            entry_material_nomor.insert(tk.END, selected_project[4])
+            entry_material_nomor.insert(tk.END, values[1])
             # kode bom -> bom
             entry_material_code.delete(0, tk.END)
-            entry_material_code.insert(tk.END, selected_project[1])
+            entry_material_code.insert(tk.END, values[2])
             # deskripsi -> bom
             entry_material_deskripsi.delete(0, tk.END)
-            entry_material_deskripsi.insert(tk.END, selected_project[2])
+            entry_material_deskripsi.insert(tk.END, values[3])
             # spesifikasi
             entry_material_spesifikasi.delete(0, tk.END)
-            entry_material_spesifikasi.insert(tk.END, selected_project[3])
+            entry_material_spesifikasi.insert(tk.END, values[4])
             # kuantitas
             entry_kuantitas.delete(0, tk.END)
-            entry_kuantitas.insert(tk.END, selected_project[5])
+            entry_kuantitas.insert(tk.END, values[5])
             # unit
-            input_satuan = selected_project[6]
+            input_satuan = values[6]
             entry_satuan.delete("1.0", "end")
             entry_satuan.insert(tk.END, input_satuan)
+
+            input_material_nomor = values[1]
+            input_bom_code = values[2]
+            input_material_deskripsi = values[3]
+            input_material_spesifikasi = values[4]
+            input_material_kuantitas = values[5]
+            input_keterangan = values[7]
         except IndexError:
             pass           
 
@@ -135,20 +153,45 @@ def window_lihat_spp(master, bom_id=0, spp_bom_id=0, project_name=""):
     button_clear = ttk.Button(group_button_review, text="Clear", command=fn_clear_selection)
     button_clear.grid(row=0, column=0, padx=3)
     # refresh
-    button_update = ttk.Button(group_button_review, text="Refresh")
+    button_update = ttk.Button(group_button_review, text="Refresh", command=populate_treeview_spp)
     button_update.grid(row=0, column=1, padx=3)
     # data sheet
     button_datasheet = ttk.Button(group_button_review, text="Data Sheet")
     button_datasheet.grid(row=0, column=2, padx=3)
     # LISTBOX
-    list_result = tk.Listbox(lihat_po, height=12, width=82, border=1)
-    list_result.grid(row=6, column=0, columnspan=6, pady=5)
-    scrollbar = tk.Scrollbar(lihat_po)
-    scrollbar.grid(row=6, column=0, columnspan=6, padx=13, sticky=tk.E)
-    list_result.configure(yscrollcommand=scrollbar.set)
-    scrollbar.configure(command=list_result.yview)
-
+    # list_result = tk.Listbox(lihat_po, height=12, width=82, border=1)
+    # list_result.grid(row=6, column=0, columnspan=6, pady=5)
+    # scrollbar = tk.Scrollbar(lihat_po)
+    # scrollbar.grid(row=6, column=0, columnspan=6, padx=13, sticky=tk.E)
+    # list_result.configure(yscrollcommand=scrollbar.set)
+    # scrollbar.configure(command=list_result.yview)
+    # Treeview
+    treeview_result = ttk.Treeview(lihat_po, height=8)
+    # Treeview -> Column declaration
+    treeview_result["columns"] = ("ID", "Nomor", "Kode BOM", "Deskripsi", "Spesifikasi", "Kuantitas", "Unit", "Status")
+    treeview_result.column("#0", anchor=tk.CENTER, width=0)
+    treeview_result.column("ID", anchor=tk.CENTER, width=40)
+    treeview_result.column("Nomor", anchor=tk.CENTER, width=80)
+    treeview_result.column("Kode BOM", anchor=tk.CENTER, width=80)
+    treeview_result.column("Deskripsi", anchor=tk.CENTER, width=140)
+    treeview_result.column("Spesifikasi", anchor=tk.CENTER, width=140)
+    treeview_result.column("Kuantitas", anchor=tk.CENTER, width=40)
+    treeview_result.column("Unit", anchor=tk.CENTER, width=50)
+    treeview_result.column("Status", anchor=tk.CENTER, width=125)
+    # Treeview -> Heading declaration
+    treeview_result.heading("#0", text="", anchor=tk.CENTER)
+    treeview_result.heading("ID", text="ID", anchor=tk.CENTER)
+    treeview_result.heading("Nomor", text="Nomor", anchor=tk.CENTER)
+    treeview_result.heading("Kode BOM", text="Kode BOM", anchor=tk.CENTER)
+    treeview_result.heading("Deskripsi", text="Deskripsi", anchor=tk.CENTER)
+    treeview_result.heading("Spesifikasi", text="Spesifikasi", anchor=tk.CENTER)
+    treeview_result.heading("Kuantitas", text="Σ", anchor=tk.CENTER)
+    treeview_result.heading("Unit", text="Satuan", anchor=tk.CENTER)
+    treeview_result.heading("Status", text="Keterangan", anchor=tk.CENTER)
+    treeview_result.grid(row=6, column=0, padx=13, sticky=tk.E)
+    treeview_result.bind("<<TreeviewSelect>>", select_item)
     # Populate to Listbox
-    commands.populate_view_spp(list_result, bom_id, spp_bom_id)
+    # commands.populate_view_spp(list_result, bom_id, spp_bom_id)
     # Bind selection
-    list_result.bind('<<ListboxSelect>>', select_item)
+    # list_result.bind('<<ListboxSelect>>', select_item)
+    populate_treeview_spp(bom_id, spp_bom_id)

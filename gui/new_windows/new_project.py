@@ -5,6 +5,7 @@ from tkinter import messagebox
 
 from database.database import Database
 import gui.commands.commands as command
+import gui.new_windows.edit_bom as eb
 
 db = Database("sbu_projects.db")
 
@@ -18,30 +19,40 @@ def window_new_project(master, project_name=""):
         new_project.iconbitmap("./favicon.ico")
 
         # Functions
+        def populate_list_treeview():
+                i = 0
+                for row in db.fetch():
+                        treeview_result.insert(parent="", index=i, iid=i, values=row)
+                        i = i + 1
         def select_item(event):
-                try:
-                        global input_update_project_id                        
-                        index = listbox_result.curselection()[0]
-                        selected_project = listbox_result.get(index)            
+                try:     
+                        global input_update_project_id       
+                        selected = treeview_result.selection()[0]
+                        values = treeview_result.item(selected, 'values')
+                        input_update_project_name = values[1]
+                        input_update_year = values[2]
+                        input_update_capacity = values[3]
+                        input_update_customer = values[4]
+                        input_update_totals = values[5]
+                        # id
+                        input_update_project_id = values[0]
                         # nama proyek
                         entry_update_project_name.delete(0, tk.END)
-                        entry_update_project_name.insert(tk.END, selected_project[1])
+                        entry_update_project_name.insert(tk.END, input_update_project_name)
                         # tahun
                         entry_update_year.delete(0, tk.END)
-                        entry_update_year.insert(tk.END, selected_project[2])
+                        entry_update_year.insert(tk.END, input_update_year)
                         # kapasitas
                         entry_update_capacity.delete(0, tk.END)
-                        entry_update_capacity.insert(tk.END, selected_project[3])
+                        entry_update_capacity.insert(tk.END, input_update_capacity)
                         # customer
                         entry_update_customer.delete(0, tk.END)
-                        entry_update_customer.insert(tk.END, selected_project[4])
+                        entry_update_customer.insert(tk.END, input_update_customer)
                         # jumlah
                         entry_update_totals.delete(0, tk.END)
-                        entry_update_totals.insert(tk.END, selected_project[5])
-                        # project id
-                        input_update_project_id = selected_project[0]
+                        entry_update_totals.insert(tk.END, input_update_totals)
                 except IndexError:
-                    pass
+                        pass
 
         def fn_choose_image():
                 filepath = filedialog.askopenfilename(initialdir="/", title="Pilih file yang dilink untuk proyek", filetypes=[("All files", ".*")])
@@ -53,18 +64,28 @@ def window_new_project(master, project_name=""):
                 db.update_project_filename(str(image).strip(), id)                        
                 command.fn_clear_entries(entry_update_project_name, entry_update_year, entry_update_capacity, entry_update_customer, entry_update_totals)
                 text_image.delete("1.0", "end")
-                populate_list(listbox_result)     
+                clear_treeview_data()
+                populate_list_treeview()  
 
         def project_add():
                 if (input_project_name.get() == "" or input_year.get() < 1900 or input_capacity.get() < 0 or input_customer.get() == "" or input_totals.get() <= 0):
                     messagebox.showerror('Semua Entry Harus Diisi', 'Tolong isi semua entry yang tersedia')
                     return
                 db.insert(input_project_name.get(), input_year.get(), input_capacity.get(), input_customer.get(), input_totals.get(), "")
-                listbox_result.delete(0, tk.END)
+                clear_treeview_data()
                 # listbox_result.insert(tk.END, (input_project_name.get(), self.update_tahun.get(), self.update_kapasitas.get(), self.update_customer.get(), self.update_jumlah.get()))
                 command.fn_clear_entries(entry_project_name, entry_year, entry_capacity, entry_customer, entry_totals)
-                populate_list(listbox_result)                      
-                
+                clear_treeview_data()
+                populate_list_treeview()                      
+
+        def clear_treeview_data():
+                for record in treeview_result.get_children():
+                        treeview_result.delete(record)
+
+        def fn_remove_project(x):
+                db.remove(x)
+                populate_list_treeview()
+
         # Variables
         # create
         input_project_name = tk.StringVar()
@@ -166,27 +187,38 @@ def window_new_project(master, project_name=""):
         button_update_project.grid(row=0, column=0, padx=6, pady=6, sticky=tk.W)
         button_clear_update = ttk.Button(group_buttons_update, text="Bersihkan", command=lambda: command.fn_clear_entries(entry_update_project_name, entry_update_year, entry_update_capacity, entry_update_customer, entry_update_totals))
         button_clear_update.grid(row=0, column=1, sticky=tk.W, padx=6)
-        button_remove_update = ttk.Button(group_buttons_update, text="Hapus")
+        button_remove_update = ttk.Button(group_buttons_update, text="Hapus", command=lambda: fn_remove_project(input_update_project_id))
         button_remove_update.grid(row=0, column=2, sticky=tk.W, padx=6)
-        
-        button_edit_bom = ttk.Button(group_buttons_update, text="Edit BOM")
+        button_edit_bom = ttk.Button(group_buttons_update, text="Edit BOM", command=lambda: eb.window_edit_bom(new_project, input_update_project_id, entry_update_project_name.get()))
         button_edit_bom.grid(row=0, column=3, sticky=tk.E, padx=6)
+        button_refresh_update = ttk.Button(group_buttons_update, text="Refresh", command=populate_list_treeview)
+        button_refresh_update.grid(row=0, column=4, sticky=tk.W, padx=6)
 
-        # Listbox
-        listbox_result = tk.Listbox(new_project, height=8, width=84, border=1)
-        listbox_result.grid(row=5, column=0, pady=5, padx=10)
-        result_scrollbar = tk.Scrollbar(new_project)
-        result_scrollbar.grid(row=5, column=0, sticky=tk.E)
-        listbox_result.configure(yscrollcommand=result_scrollbar.set)
-        result_scrollbar.configure(command=listbox_result.yview)
-
+        # Treeview
+        treeview_result = ttk.Treeview(new_project, height=8)
+        # Column declaration
+        treeview_result['columns'] = ("ID", "Nama Proyek", "Tahun", "Kapasitas", "Customer", "Jumlah Unit")
+        treeview_result.column("#0", anchor=tk.CENTER, width=0)
+        treeview_result.column("ID", anchor=tk.CENTER, width=45)        
+        treeview_result.column("Nama Proyek", anchor=tk.CENTER, width=125)
+        treeview_result.column("Tahun", anchor=tk.CENTER, width=125)
+        treeview_result.column("Kapasitas", anchor=tk.CENTER, width=125)
+        treeview_result.column("Customer", anchor=tk.CENTER, width=125)
+        treeview_result.column("Jumlah Unit", anchor=tk.CENTER, width=125)
+        # Heading declaration
+        treeview_result.heading("#0", text="", anchor=tk.CENTER)
+        treeview_result.heading("ID", text="ID", anchor=tk.CENTER)
+        treeview_result.heading("Nama Proyek", text="Nama Proyek", anchor=tk.CENTER)
+        treeview_result.heading("Tahun", text="Tahun", anchor=tk.CENTER)
+        treeview_result.heading("Kapasitas", text="Kapasitas", anchor=tk.CENTER)
+        treeview_result.heading("Customer", text="Customer", anchor=tk.CENTER)
+        treeview_result.heading("Jumlah Unit", text="Jumlah Unit", anchor=tk.CENTER)
+        # Event binder
+        treeview_result.bind("<<TreeviewSelect>>", select_item)
+        treeview_result.grid(row=5, column=0, padx=24)
+        
         # Clear available inputs
         command.fn_clear_entries(entry_project_name, entry_year, entry_capacity, entry_customer, entry_totals)
         command.fn_clear_entries(entry_update_project_name, entry_update_year, entry_update_capacity, entry_update_customer, entry_update_totals)
-        populate_list(listbox_result)
-        listbox_result.bind('<<ListboxSelect>>', select_item)
 
-def populate_list(parent_widget):
-        parent_widget.delete(0, tk.END)
-        for row in db.fetch():
-            parent_widget.insert(tk.END, row)
+        populate_list_treeview()

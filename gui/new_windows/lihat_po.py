@@ -25,27 +25,38 @@ def window_lihat_po(master, bom_id=0, spp_bom_id=0, project_name=""):
 
     def select_item(event):
         try:
-            index = list_result.curselection()[0]
-            selected_project = list_result.get(index)
-            
+            selected = treeview_result.selection()[0]
+            values = treeview_result.item(selected, 'values')
+
             entry_bom_code.delete(0, tk.END)
-            entry_bom_code.insert(tk.END, selected_project[1])
+            entry_bom_code.insert(tk.END, values[3])
             entry_material_kode.delete(0, tk.END)
-            entry_material_kode.insert(tk.END, selected_project[2])
+            entry_material_kode.insert(tk.END, values[3])
             entry_material_kuantitas.delete(0, tk.END)
-            entry_material_kuantitas.insert(tk.END, selected_project[3])
+            entry_material_kuantitas.insert(tk.END, values[6])
             entry_material_number.delete(0, tk.END)
-            entry_material_number.insert(tk.END, selected_project[4])
+            entry_material_number.insert(tk.END, values[1])
             entry_material_deskripsi.delete(0, tk.END)
-            entry_material_deskripsi.insert(tk.END, selected_project[5])
+            entry_material_deskripsi.insert(tk.END, values[4])
             entry_material_tanggal.delete(0, tk.END)
-            entry_material_tanggal.insert(tk.END, selected_project[6])
+            entry_material_tanggal.insert(tk.END, values[2])
             entry_material_spesifikasi.delete(0, tk.END)
-            entry_material_spesifikasi.insert(tk.END, selected_project[7])
+            entry_material_spesifikasi.insert(tk.END, values[5])
             entry_satuan.delete("1.0", "end")
-            entry_satuan.insert(tk.END, selected_project[8])            
+            entry_satuan.insert(tk.END, values[7])   
         except IndexError:
             pass 
+    
+    def clear_treeview_po():
+        for record in treeview_result.get_children():
+            treeview_result.delete(record)
+
+    def populate_treeview_po(x, y):
+        clear_treeview_po()
+        i = 0
+        for row in db.fetch_view_po(x, y):
+            treeview_result.insert(parent="", index=i, iid=i, values=(row[0], row[4], row[6], row[1], row[5], row[7], row[3], row[8]))
+            i = i + 1
 
     # ===VARIABLES===
     input_bom_code = tk.StringVar()
@@ -149,15 +160,43 @@ def window_lihat_po(master, bom_id=0, spp_bom_id=0, project_name=""):
     # data sheet
     button_datasheet = ttk.Button(group_button_review, text="Data Sheet")
     button_datasheet.grid(row=0, column=2, padx=3)
-    # LISTBOX
-    list_result = tk.Listbox(lihat_po, height=12, width=82, border=1)
-    list_result.grid(row=6, column=0, columnspan=6, pady=5)
-    scrollbar = tk.Scrollbar(lihat_po)
-    scrollbar.grid(row=6, column=0, columnspan=6, padx=13, sticky=tk.E)
-    list_result.configure(yscrollcommand=scrollbar.set)
-    scrollbar.configure(command=list_result.yview)
+    # # LISTBOX
+    # list_result = tk.Listbox(lihat_po, height=12, width=82, border=1)
+    # list_result.grid(row=6, column=0, columnspan=6, pady=5)
+    # scrollbar = tk.Scrollbar(lihat_po)
+    # scrollbar.grid(row=6, column=0, columnspan=6, padx=13, sticky=tk.E)
+    # list_result.configure(yscrollcommand=scrollbar.set)
+    # scrollbar.configure(command=list_result.yview)
+    
+    # Treeview
+    treeview_result = ttk.Treeview(lihat_po, height=8)
+    # Column Declaration
+    treeview_result["columns"] = ("ID", "Nomor", "Tanggal", "Kode", "Deskripsi", "Spesifikasi", "Kuantitas", "Satuan")
+    treeview_result.column("#0", anchor=tk.CENTER, width=0)
+    treeview_result.column("ID", anchor=tk.CENTER, width=40)
+    treeview_result.column("Nomor", anchor=tk.CENTER, width=80)
+    treeview_result.column("Tanggal", anchor=tk.CENTER, width=80)
+    treeview_result.column("Kode", anchor=tk.CENTER, width=80)
+    treeview_result.column("Deskripsi", anchor=tk.CENTER, width=160)
+    treeview_result.column("Spesifikasi", anchor=tk.CENTER, width=160)
+    treeview_result.column("Kuantitas", anchor=tk.CENTER, width=40)
+    treeview_result.column("Satuan", anchor=tk.CENTER, width=60)
+    # Heading Declaration
+    treeview_result.heading("#0", text="", anchor=tk.CENTER)
+    treeview_result.heading("ID", text="ID", anchor=tk.CENTER)
+    treeview_result.heading("Nomor", text="Nomor", anchor=tk.CENTER)
+    treeview_result.heading("Tanggal", text="Tanggal", anchor=tk.CENTER)
+    treeview_result.heading("Kode", text="Kode", anchor=tk.CENTER)
+    treeview_result.heading("Deskripsi", text="Deskripsi", anchor=tk.CENTER)
+    treeview_result.heading("Spesifikasi", text="Spesifikasi", anchor=tk.CENTER)
+    treeview_result.heading("Kuantitas", text="Σ", anchor=tk.CENTER)
+    treeview_result.heading("Satuan", text="Unit", anchor=tk.CENTER)
+    # Placement & Event binding
+    treeview_result.grid(row=6, column=0, pady=5, padx=10)
+    treeview_result.bind("<<TreeviewSelect>>", select_item)
 
     # Populate to Listbox
-    commands.populate_view_po(list_result, bom_id, spp_bom_id)
+    # commands.populate_view_po(list_result, bom_id, spp_bom_id)
     # Bind selection
-    list_result.bind('<<ListboxSelect>>', select_item)
+    # list_result.bind('<<ListboxSelect>>', select_item)
+    populate_treeview_po(bom_id, spp_bom_id)

@@ -25,7 +25,7 @@ def fn_clear_entries(*entries):
         for entry in temp_entries:
                 entry.delete(0, tk.END)
 
-def excel_to_list_insert(path, selected_project):
+def excel_to_list_insert(path, selected_project, label_to_update):
         bom_id_ref = 1
         df = pd.read_excel(path, sheet_name="BOM")
         df_value = df.values
@@ -34,4 +34,4 @@ def excel_to_list_insert(path, selected_project):
             db.insert_spp(val[7], val[8], val[9], val[10], selected_project[0], bom_id_ref)
             db.insert_po(val[11], val[12], val[13], val[14], val[15], selected_project[0], bom_id_ref)
             bom_id_ref = bom_id_ref + 1
-        print("Success")
+        label_to_update.configure(text="Berhasil mengimpor.", fg="green")

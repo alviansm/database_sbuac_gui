@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import CENTER, ttk
 from tkinter import font
 from tkinter import messagebox
 from turtle import width
@@ -26,7 +26,7 @@ class Application(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.master = master
-        master.title('OK!')
+        master.title('PYKonektor (Beta)')
         master.geometry("720x520")
         master.resizable(False, False)
         master.iconbitmap("./favicon.ico")
@@ -88,13 +88,15 @@ class Application(tk.Frame):
         self.create_widgets()
 
         # Pupulate List
-        self.populate_list()
+        # self.populate_list()
+        self.populate_list_treeview()
         
     def create_widgets(self):
         self.group_title()
         self.group_search_by_year()
         self.group_data_update()
-        self.group_list_result()
+        # self.group_list_result()
+        self.treeview_list_result()
         self.fn_clear_selection()
         self.fn_group_button_options()
 
@@ -120,9 +122,9 @@ class Application(tk.Frame):
         self.tambah_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
         self.app_menu.add_cascade(label="Edit", menu=self.tambah_menu)
         self.tambah_menu.add_command(label="Proyek Baru", command=lambda: np.window_new_project(self.master))
-        self.tambah_menu.add_command(label="Edit BOM", command=self.menu_commands)
-        self.tambah_menu.add_command(label="Edit SPP", command=self.menu_commands)
-        self.tambah_menu.add_command(label="Edit PO", command=self.menu_commands)
+        # self.tambah_menu.add_command(label="Edit BOM", command=self.menu_commands)
+        # self.tambah_menu.add_command(label="Edit SPP", command=self.menu_commands)
+        # self.tambah_menu.add_command(label="Edit PO", command=self.menu_commands)
 
         # Ekspor
         self.export_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
@@ -132,20 +134,20 @@ class Application(tk.Frame):
         self.export_menu.add_command(label="Sebaga PDF", command=self.menu_commands)
 
         # Autentikasi
-        self.auth_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
-        self.app_menu.add_cascade(label="Autentikasi", menu=self.auth_menu)
-        self.auth_menu.add_command(label="Login", command=lambda: auth.fn_window_authentication(self.master))
-        self.auth_menu.add_command(label="Buat Akun", command=self.menu_commands)
-        self.auth_menu.add_separator()
-        self.auth_menu.add_command(label="Pengaturan Akun", command=self.menu_commands)
-        self.auth_menu.add_separator()
-        self.auth_menu.add_command(label="Sign Out", command=self.menu_commands)
+        # self.auth_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
+        # self.app_menu.add_cascade(label="Autentikasi", menu=self.auth_menu)
+        # self.auth_menu.add_command(label="Login", command=lambda: auth.fn_window_authentication(self.master))
+        # self.auth_menu.add_command(label="Buat Akun", command=self.menu_commands)
+        # self.auth_menu.add_separator()
+        # self.auth_menu.add_command(label="Pengaturan Akun", command=self.menu_commands)
+        # self.auth_menu.add_separator()
+        # self.auth_menu.add_command(label="Sign Out", command=self.menu_commands)
 
         # Petunjuk
         self.bantuan_menu = tk.Menu(self.app_menu, font=("Arial", 11), tearoff=False)
         self.app_menu.add_cascade(label="Petunjuk", menu=self.bantuan_menu)
         self.bantuan_menu.add_command(label="Cara Penggunaan", command=self.menu_commands)
-        self.bantuan_menu.add_command(label="Petunjuk membagikan database", command=self.menu_commands)
+        # self.bantuan_menu.add_command(label="Petunjuk membagikan database", command=self.menu_commands)
         self.bantuan_menu.add_separator()
         self.bantuan_menu.add_command(label="Tentang Kami", command=self.show_popup_about)
 
@@ -178,7 +180,7 @@ class Application(tk.Frame):
         self.entry_project_code.grid(row=0, column=3)  
 
         # Tombol cari
-        self.button_year_search = ttk.Button(self.frame_search_by_year, text="Cari", width=8, padding=1, command=lambda: self.fn_search_by(self.search_year.get(), self.search_name.get(), self.search_bomcode.get()))
+        self.button_year_search = ttk.Button(self.frame_search_by_year, text="Cari", width=8, padding=1, command=lambda: self.fn_search_treeview_by(self.search_year.get(), self.search_name.get(), self.search_bomcode.get()))
         self.button_year_search.grid(row=0, column=6, padx=1, sticky=tk.E)
 
         # Checkbox -> Proyek / Component option
@@ -225,13 +227,13 @@ class Application(tk.Frame):
         self.group_button_options = tk.Frame(self.master)
         self.group_button_options.grid(row=3, column=0, padx=20, pady=5, sticky=tk.W)
 
-        self.button_clear = ttk.Button(self.group_button_options, text="Data Sheet", command=lambda: self.preview_file(self.selected_project[0]))
+        self.button_clear = ttk.Button(self.group_button_options, text="Data Sheet", command=lambda: self.preview_file(self.selected_project_id))
         self.button_clear.grid(row=0, column=0, sticky=tk.W)
         self.button_show_bom = ttk.Button(self.group_button_options, text="Lihat BOM", command=lambda: lb.window_lihat_bom(self.master, project_id=self.selected_project_id, project_name=self.update_nama))
         self.button_show_bom.grid(row=0, column=1, padx=12)
         self.button_show_image = ttk.Button(self.group_button_options, text="Clear", command=lambda: command.fn_clear_entries(self.entry_project_name, self.entry_project_year, self.entry_project_capacity, self.entry_project_customer, self.entry_project_units))
         self.button_show_image.grid(row=0, column=2, sticky=tk.E)
-        self.button_show_image = ttk.Button(self.group_button_options, text="Refresh", command=self.populate_list)
+        self.button_show_image = ttk.Button(self.group_button_options, text="Refresh", command=self.populate_list_treeview)
         self.button_show_image.grid(row=0, column=3, padx=12, sticky=tk.E)
 
     def group_list_result(self):
@@ -246,6 +248,80 @@ class Application(tk.Frame):
 
         # Bind selection
         self.list_result.bind('<<ListboxSelect>>', self.select_item)
+    
+    def treeview_list_result(self):
+        self.treeview_result = ttk.Treeview(self.master, height=8)
+        self.treeview_result.grid(row=4, column=0, pady=5)
+
+        # Column declaration
+        self.treeview_result['columns'] = ("ID", "Nama Proyek", "Tahun", "Kapasitas", "Customer", "Jumlah Unit")
+        self.treeview_result.column("#0", anchor=CENTER, width=0)
+        self.treeview_result.column("ID", anchor=CENTER, width=45)        
+        self.treeview_result.column("Nama Proyek", anchor=CENTER, width=125)
+        self.treeview_result.column("Tahun", anchor=CENTER, width=125)
+        self.treeview_result.column("Kapasitas", anchor=CENTER, width=125)
+        self.treeview_result.column("Customer", anchor=CENTER, width=125)
+        self.treeview_result.column("Jumlah Unit", anchor=CENTER, width=125)
+        # Heading declaration
+        self.treeview_result.heading("#0", text="", anchor=CENTER)
+        self.treeview_result.heading("ID", text="ID", anchor=CENTER)
+        self.treeview_result.heading("Nama Proyek", text="Nama Proyek", anchor=CENTER)
+        self.treeview_result.heading("Tahun", text="Tahun", anchor=CENTER)
+        self.treeview_result.heading("Kapasitas", text="Kapasitas", anchor=CENTER)
+        self.treeview_result.heading("Customer", text="Customer", anchor=CENTER)
+        self.treeview_result.heading("Jumlah Unit", text="Jumlah Unit", anchor=CENTER)
+        # Change variable
+        self.treeview_result.bind("<<TreeviewSelect>>", self.clicker)
+        # Strip configuration
+        self.treeview_result.tag_configure("oddrow", background="white")
+        self.treeview_result.tag_configure("evenrow", background="lightgray")
+
+    # Treeview select event handler
+    def clicker(self, event):        
+        try:            
+            selected = self.treeview_result.selection()[0]
+            values = self.treeview_result.item(selected, 'values')
+            self.update_nama = values[1]
+            self.update_tahun = values[2]
+            self.update_kapasitas = values[3]
+            self.update_customer = values[4]
+            self.update_jumlah = values[5]
+            # nama proyek
+            self.entry_project_name.delete(0, tk.END)
+            self.entry_project_name.insert(tk.END, self.update_nama)
+            # tahun
+            self.entry_project_year.delete(0, tk.END)
+            self.entry_project_year.insert(tk.END, self.update_tahun)
+            # kapasitas
+            self.entry_project_capacity.delete(0, tk.END)
+            self.entry_project_capacity.insert(tk.END, self.update_kapasitas)
+            # customer
+            self.entry_project_customer.delete(0, tk.END)
+            self.entry_project_customer.insert(tk.END, self.update_customer)
+            # jumlah
+            self.entry_project_units.delete(0, tk.END)
+            self.entry_project_units.insert(tk.END, self.update_jumlah)
+            # project id
+            self.selected_project_id = values[0]
+            self.update_nama = self.entry_project_name.get()
+        except IndexError:
+            pass
+
+    # Populate database to treeview
+    def populate_list_treeview(self):
+        self.clear_treeview_data()
+        count = 0
+        for row in db.fetch():
+            if count % 2 == 0:
+                self.treeview_result.insert(parent="", index=count, iid=count, values=row, tags=("evenrow",))
+            else:
+                self.treeview_result.insert(parent="", index=count, iid=count, values=row, tags=("oddrow",))
+            count += 1
+
+    # Clear data in treeview
+    def clear_treeview_data(self):
+        for record in self.treeview_result.get_children():
+            self.treeview_result.delete(record)
 
     # Populate database to list_result widget
     def populate_list(self):
@@ -257,6 +333,11 @@ class Application(tk.Frame):
         self.list_result.delete(0, tk.END)
         for row in db.search_by_year(param_year, param_name, param_id):
             self.list_result.insert(tk.END, row)
+    
+    def fn_search_treeview_by(self, param_year, param_name, param_id):
+        self.clear_treeview_data()
+        for row in db.search_by_year(param_year, param_name, param_id):
+            self.treeview_result.insert(parent="", index=row[0], iid=row[0], values=row)
 
     # Used in new window -> tambah proyek
     def project_add(self):
@@ -299,7 +380,7 @@ class Application(tk.Frame):
         self.fn_clear_selection()
         self.populate_list()
 
-    def preview_file(self, project_id):        
+    def preview_file(self, project_id):
         self.filepath = db.select_project_image(project_id)
         if platform.system() == "Darwin":
             subprocess.call(('open', self.filepath[0][0]))
@@ -307,7 +388,6 @@ class Application(tk.Frame):
             os.startfile(self.filepath[0][0])
         else:
             subprocess.call(('xdg-open', self.filepath[0][0]))
-
 
     def fn_update_project(self):
         db.update(self.selected_project[0], self.update_nama.get(), self.update_tahun.get(), self.update_kapasitas.get(), self.update_customer.get(), self.update_jumlah.get())
