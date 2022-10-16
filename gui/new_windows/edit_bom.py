@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog  
+import subprocess, os, platform
 
 from database.database import Database
 import gui.new_windows.lihat_po as lp
@@ -91,7 +92,7 @@ def window_edit_bom(master, project_id=0, project_name=""):
 
     def update_bom(project_id=0, rev="", kode_material="", deskripsi="", spesifikasi="", kuantitas=0, satuan="", keterangan="", datasheet_path=""):
         # update in database
-        db.update_bom(project_id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan)
+        db.update_bom(project_id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan, entry_datasheet_path.get("1.0", "end"))
         # update project filename
         if len(datasheet_path) > 0:
             db.update_bom_filename(str(datasheet_path).strip(), id)
@@ -105,9 +106,18 @@ def window_edit_bom(master, project_id=0, project_name=""):
     def fn_choose_image():
         filepath = filedialog.askopenfilename(initialdir="/", title="Pilih file yang dilink untuk proyek", filetypes=[("All files", ".*")])
         entry_datasheet_path.delete("1.0", "end")
-        entry_datasheet_path.insert(tk.END, filepath)
+        entry_datasheet_path.insert(tk.END, str(filepath).strip())
         global filename_path
         filename_path = filepath
+
+    def fn_preview_bom_datasheet(kode_material):
+        filepath = db.fetch_view_bom_datasheet(kode_material)
+        if platform.system() == "Darwin":
+            subprocess.call(('open', filepath[0]))
+        elif platform.system() == "Windows":
+            os.startfile(filepath[0])
+        else:
+            subprocess.call(('xdg-open', filepath[0]))
 
     # ===WIDGETS===
     # JUDUL
@@ -197,7 +207,7 @@ def window_edit_bom(master, project_id=0, project_name=""):
     button_clear = ttk.Button(group_button_review, text="Clear", command=fn_clear_view_bom)
     button_clear.grid(row=0, column=1, padx=3)
     # update
-    button_update_bom = ttk.Button(group_button_review, text="Update", command=lambda: update_bom(project_id, entry_material_rev.get(), entry_material_code.get(), entry_deskripsi.get(), entry_spesifikasi.get(), entry_kuantitas.get(), entry_satuan.get(), entry_keterangan.get()))
+    button_update_bom = ttk.Button(group_button_review, text="Update", command=lambda: update_bom(project_id, entry_material_rev.get(), entry_material_code.get(), entry_deskripsi.get(), entry_spesifikasi.get(), entry_kuantitas.get(), entry_satuan.get("1.0", "end"), entry_keterangan.get()))
     button_update_bom.grid(row=0, column=2, padx=3)
     # lihat spp
     button_lihat_spp = ttk.Button(group_button_review, text="Edit SPP", command=lambda: ls.window_lihat_spp(master, project_id, project_id))
@@ -206,7 +216,7 @@ def window_edit_bom(master, project_id=0, project_name=""):
     button_lihat_po = ttk.Button(group_button_review, text="Edit PO", command=lambda: lp.window_lihat_po(master, project_id, project_id))
     button_lihat_po.grid(row=0, column=4, padx=3)
     # data sheet
-    button_datasheet = ttk.Button(group_button_review, text="Data Sheet")
+    button_datasheet = ttk.Button(group_button_review, text="Data Sheet", command=lambda: fn_preview_bom_datasheet(entry_material_code.get()))
     button_datasheet.grid(row=0, column=5, padx=3)
     # label message
     if project_id == 0:

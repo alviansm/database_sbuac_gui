@@ -185,15 +185,17 @@ class Database:
             ''', (filepath, project_id))
         self.conn.commit()
     # Update -> BOM
-    def update_bom(self, id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan):
+    def update_bom(self, id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan, filepath):
         sql = "UPDATE bom SET rev=?, kode_material=?, deskripsi=?, spesifikasi=?, kuantitas=?, satuan=?, keterangan=? WHERE id=?"
         variables = (rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan, id)
         self.cur.execute(sql, variables)
         self.conn.commit()
-    def update_bom_filename(self, filepath, project_id):
+        if len(filepath) > 0:
+            self.update_bom_filename(filepath, kode_material)
+    def update_bom_filename(self, filepath, kode_material):
         self.cur.execute('''
-                UPDATE bom SET filepath=? WHERE id=?
-            ''', (filepath, project_id))
+                UPDATE bom SET filepath=? WHERE kode_material=?
+            ''', (str(filepath).strip(), kode_material))
         self.conn.commit()
     # Update -> SPP
     def update_spp(self, id, nomor, kuantitas, satuan, status):
