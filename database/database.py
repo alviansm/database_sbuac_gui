@@ -135,6 +135,34 @@ class Database:
         self.cur.execute("SELECT image FROM projects WHERE id=?", (project_id,))
         rows = self.cur.fetchall()
         return rows
+    # Fetch all with unique material to be exported
+    def fetch_all_material_tables(self, param_project_id):
+        sql = '''SELECT bom.id,
+                    bom.rev,
+                    bom.kode_material,
+                    bom.deskripsi,
+                    bom.spesifikasi,
+                    bom.kuantitas,
+                    bom.satuan,
+                    spp.nomor,
+                    spp.kuantitas,
+                    spp.satuan,
+                    spp.status,
+                    po.nomor,
+                    po.kuantitas,
+                    po.satuan,
+                    po.kode,
+                    po.tanggal_kedatangan,
+                    bom.keterangan
+                FROM bom
+                INNER JOIN spp
+                INNER JOIN po
+                INNER JOIN projects
+                WHERE bom.id = spp.bom_id AND bom.id = po.bom_id AND projects.id = ?;
+            '''
+        self.cur.execute(sql, (param_project_id,))
+        rows = self.cur.fetchall()
+        return rows
 
     # INSERT
     # Insert -> projects

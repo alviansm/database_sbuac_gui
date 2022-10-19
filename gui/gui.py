@@ -12,6 +12,7 @@ import gui.new_windows.auth as auth
 import gui.commands.commands as command
 import gui.commands.convert_to_list as ctl
 import gui.new_windows.lihat_bom as lb
+import gui.new_windows.export_to_excel as ete
 
 db = Database("sbu_projects.db")
 
@@ -26,7 +27,7 @@ class Application(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.master = master
-        master.title('PYKonektor (Beta)')
+        master.title('PYKonektor - Main Windows GUI')
         master.geometry("720x520")
         master.resizable(False, False)
         master.iconbitmap("./favicon.ico")
@@ -129,9 +130,7 @@ class Application(tk.Frame):
         # Ekspor
         self.export_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
         self.app_menu.add_cascade(label="Ekspor", menu=self.export_menu)
-        self.export_menu.add_command(label="Sebagai Excel", command=self.menu_commands)
-        self.export_menu.add_command(label="Sebagai CSV", command=self.menu_commands)
-        self.export_menu.add_command(label="Sebaga PDF", command=self.menu_commands)
+        self.export_menu.add_command(label="Sebagai Excel", command=lambda: ete.fn_window_export_to_excel(self.master))
 
         # Autentikasi
         # self.auth_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
@@ -174,19 +173,19 @@ class Application(tk.Frame):
         self.entry_name.grid(row=0, column=1)         
 
         # Entry project code
-        self.label_bom_code = tk.Label(self.frame_search_by_year, text="Kode Proyek : ")
+        self.label_bom_code = tk.Label(self.frame_search_by_year, text="ID Proyek : ")
         self.label_bom_code.grid(row=0, column=2, padx=12, sticky=tk.E)
         self.entry_project_code = tk.Entry(self.frame_search_by_year, textvariable=self.search_bomcode, font=("Arial", 11), width=16)
         self.entry_project_code.grid(row=0, column=3)  
 
         # Tombol cari
-        self.button_year_search = ttk.Button(self.frame_search_by_year, text="Cari", width=8, padding=1, command=lambda: self.fn_search_treeview_by(self.search_year.get(), self.search_name.get(), self.search_bomcode.get()))
-        self.button_year_search.grid(row=0, column=6, padx=1, sticky=tk.E)
+        self.button_year_search = ttk.Button(self.frame_search_by_year, text="Cari", width=13, padding=1, command=lambda: self.fn_search_treeview_by(self.search_year.get(), self.search_name.get(), self.search_bomcode.get()))
+        self.button_year_search.grid(row=0, column=6, padx=4, sticky=tk.E)
 
         # Checkbox -> Proyek / Component option
         self.search_cb_project = tk.Checkbutton(self.frame_search_by_year, text="Proyek", variable=self.search_cb_project_val).grid(row=0, column=4, sticky=tk.W)
         self.search_cb_project
-        self.search_cb_component = tk.Checkbutton(self.frame_search_by_year, text="Komponen", variable=self.search_cb_component_val).grid(row=1, column=4)
+        # self.search_cb_component = tk.Checkbutton(self.frame_search_by_year, text="Komponen", variable=self.search_cb_component_val).grid(row=1, column=4)
 
     def group_data_update(self):
         # Frame update project
@@ -273,8 +272,8 @@ class Application(tk.Frame):
         # Change variable
         self.treeview_result.bind("<<TreeviewSelect>>", self.clicker)
         # Strip configuration
-        self.treeview_result.tag_configure("oddrow", background="white")
-        self.treeview_result.tag_configure("evenrow", background="lightgray")
+        # self.treeview_result.tag_configure("oddrow", background="white")
+        # self.treeview_result.tag_configure("evenrow", background="lightgray")
 
     # Treeview select event handler
     def clicker(self, event):        
@@ -422,7 +421,7 @@ class Application(tk.Frame):
 
         # Keterangan
         self.aboutus_titile = tk.Label(self.about_us, text="Tentang Kami", font=("Verdana bold", 14)).pack()
-        self.aboutus_version = tk.Label(self.about_us, text="Versi 0.1.0 (Beta)", font=("Arial bold", 11)).pack()
+        self.aboutus_version = tk.Label(self.about_us, text="Versi 0.1.0", font=("Arial bold", 11)).pack()
         self.aboutus_description = tk.Label(self.about_us, text="Program ini dikembangkan untuk mempermudah pengelolaan ", font=("Arial", 11)).pack()
         self.aboutus_description2 = tk.Label(self.about_us, text="data proyek yang ada di SBU AC PT IMS, secara open source di github", font=("Arial", 11)).pack()
         self.aboutus_description2 = tk.Label(self.about_us, text="oleh peserta MSIB Batch 3 2022. Terima kasih!", font=("Arial", 11)).pack()
