@@ -24,6 +24,7 @@ def fn_window_export_to_excel(master):
     window_export_to_excel.geometry("695x380")
     window_export_to_excel.resizable(False, False)
     window_export_to_excel.iconbitmap("./favicon.ico")
+    window_export_to_excel.attributes("-topmost", True)
 
     # === VARIABLES DECLARATION ===
     EXPORT_FORMAT_OPTIONS = [
@@ -107,9 +108,8 @@ def fn_window_export_to_excel(master):
             rows_length = len(a)
             df = pd.DataFrame(a)
             path = entry_path_export.get()
-            # Export to excel
             df.to_excel(path, sheet_name="Bill of Materials", startrow=6, startcol=1, header=False, index=False)            
-            # Excel formatting
+            # Call the function to format document
             format_excel_bom(path)
             # Show message info
             messagebox.showinfo("Info", "Berhasil mengekspor")
@@ -127,13 +127,13 @@ def fn_window_export_to_excel(master):
 
         # content styling
         global rows_length
-        for rows in sheet.iter_cols(min_row=7, max_row=int(rows_length), min_col=2, max_col=18):
+        length = rows_length
+        for rows in sheet.iter_cols(min_row=7, max_row=int(length)+6, min_col=2, max_col=18):
             print(rows)
             for cell in rows:
                 cell.alignment = Alignment(horizontal="center", vertical="center")
                 cell.border = Border(top=thin, right=thin, bottom=thin, left=thin)
                 cell.font = Font(b=False, size=8, name="Times New Roman")
-                cell.fill = PatternFill(start_color="00FFFF00", end_color="00FFFF00", fill_type="solid")
 
         # for cell in sheet["7:"]:
         #     cell.alignment = Alignment(horizontal="center", vertical="center")
