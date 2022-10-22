@@ -6,10 +6,10 @@ import gui.commands.commands as commands
 db = Database("sbu_projects.db")
 
 global_selected_spp_id = 0
-def window_lihat_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
+def window_edit_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
     # WINDOW -> konfigurasi window proyek baru
     lihat_po = tk.Toplevel(master)
-    lihat_po.title("Review SPP")
+    lihat_po.title("Edit SPP")
     lihat_po.geometry("720x520")
     lihat_po.resizable(False, False)
     lihat_po.iconbitmap("./favicon.ico")
@@ -41,9 +41,9 @@ def window_lihat_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
         entry_satuan.delete("1.0", "end")
 
     def fn_clear_search():
+        entry_search_material_spec.delete(0, tk.END)
         entry_search_material_kode.delete(0, tk.END)
         entry_search_material_deskripsi.delete(0, tk.END)
-        entry_search_material_spec.delete(0, tk.END)
 
     def clear_treeview_spp():
         for record in treeview_result.get_children():
@@ -105,10 +105,14 @@ def window_lihat_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
         clear_treeview_spp()
         populate_treeview_spp(project_id)
 
+    def fn_refresh():
+        clear_treeview_spp()
+        populate_treeview_spp(project_id)
+
     # ===WIDGETS===
     # JUDUL
     if project_name == "":
-            title = tk.Label(lihat_po, text="Review SPP", pady=4, padx=4, font=("Verdana bold", 12))
+            title = tk.Label(lihat_po, text="Edit SPP", pady=4, padx=4, font=("Verdana bold", 12))
             title.grid(row=0, column=0, columnspan=6)        
     else:
             title = tk.Label(lihat_po, text=project_name, pady=4, padx=4, font=("Verdana bold", 12))
@@ -138,7 +142,7 @@ def window_lihat_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
     button_search = ttk.Button(group_button_search, text="Clear", command=fn_clear_search)
     button_search.grid(row=0, column=0, sticky=tk.W, padx=12)
     # cari
-    button_search = ttk.Button(group_button_search, text="Cari", command=lambda: fn_search_treeview(project_id, entry_search_material_kode.get(), entry_material_deskripsi.get(), entry_search_material_spec.get()))
+    button_search = ttk.Button(group_button_search, text="Cari", command=lambda: fn_search_treeview(project_id, entry_search_material_kode.get(), entry_search_material_deskripsi.get(), entry_search_material_spec.get()))
     button_search.grid(row=0, column=1)
     # GROUP -> REVIEW MATERIAL TERPILIH
     group_insert = tk.LabelFrame(lihat_po, text="Review Material", font=("Verdana bold", 9))
@@ -175,12 +179,15 @@ def window_lihat_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
     # GROUP BUTTON REVIEW MATERIAL
     group_button_review = tk.Frame(lihat_po)
     group_button_review.grid(row=5, column=0, columnspan=6, pady=3, padx=12, sticky=tk.E)
+    # delete
+    button_delete = ttk.Button(group_button_review, text="Hapus Data", command=lambda: fn_remove_selection(global_selected_spp_id))
+    button_delete.grid(row=0, column=0, padx=3)
     # clear
     button_clear = ttk.Button(group_button_review, text="Clear", command=fn_clear_selection)
-    button_clear.grid(row=0, column=0, padx=3)
+    button_clear.grid(row=0, column=1, padx=3)
     # refresh
-    button_update = ttk.Button(group_button_review, text="Refresh", command=lambda: populate_treeview_spp(project_id))
-    button_update.grid(row=0, column=1, padx=3)
+    button_update = ttk.Button(group_button_review, text="Refresh", command=fn_refresh)
+    button_update.grid(row=0, column=2, padx=3)
     # LISTBOX
     # list_result = tk.Listbox(lihat_po, height=12, width=82, border=1)
     # list_result.grid(row=6, column=0, columnspan=6, pady=5)

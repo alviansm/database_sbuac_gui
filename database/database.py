@@ -69,17 +69,6 @@ class Database:
             )'''
         )
         self.conn.commit()
-        self.cur.execute(
-            '''CREATE TABLE IF NOT EXISTS user_admin 
-            (
-            id INTEGER, 
-            username TEXT,
-            password TEXT, 
-            time_created TEXT,
-            PRIMARY KEY (id)
-            )'''
-        )
-        self.conn.commit()
 
     # Fetch -> projects
     def fetch(self):
@@ -88,7 +77,7 @@ class Database:
         return rows
     # Fetch -> BOM
     def fetch_view_bom(self, project_id):
-        self.cur.execute('''SELECT id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan FROM bom WHERE project_id = ?''', (project_id,))
+        self.cur.execute('''SELECT DISTINCT id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan FROM bom WHERE project_id = ?''', (project_id,))
         rows = self.cur.fetchall()
         return rows
     # Fetch bom datasheet
@@ -97,19 +86,65 @@ class Database:
         row = self.cur.fetchone()
         return row
     # Fetch -> SPP
-    def fetch_view_spp(self, bom_id, spp_bom_id):
-        self.cur.execute('''SELECT * FROM bom AS a INNER JOIN spp AS b ON (a.id = ? AND b.bom_id = ?)''', (bom_id, spp_bom_id))
+    def fetch_view_spp(self, project_id):
+        self.cur.execute('''
+        SELECT DISTINCT bom.id,
+                bom.rev,
+                bom.kode_material,
+                bom.deskripsi,
+                bom.spesifikasi,
+                bom.kuantitas,
+                bom.satuan,
+                spp.nomor,
+                spp.kuantitas,
+                spp.satuan,
+                spp.status,
+                po.nomor,
+                po.kuantitas,
+                po.satuan,
+                po.kode,
+                po.tanggal_kedatangan,
+                bom.keterangan
+        FROM bom
+        INNER JOIN spp
+        INNER JOIN po
+        INNER JOIN projects
+        WHERE bom.id = spp.bom_id AND bom.id = po.bom_id AND bom.project_id = ?
+        ''', (project_id))
         rows = self.cur.fetchall()
         result_rows = []
         for row in rows:
             # id, kode_material (bom), deskripsi (bom), spesifikasi (bom), nomor, satuan, unit, status
-            values = [row[0], row[2], row[3], row[4], row[11], row[12], row[13], row[14]]
+            values = [row[0], row[2], row[3], row[4], row[7], row[8], row[9], row[10]]
             temp_tuple = tuple(values)
             result_rows.append(temp_tuple)
-        return result_rows
+        return sorted(result_rows)
     # Fetch -> PO
-    def fetch_view_po(self, bom_id, spp_bom_id):
-        self.cur.execute('''SELECT * FROM bom AS a INNER JOIN po AS b ON (a.id = ? AND b.bom_id = ?)''', (bom_id, spp_bom_id))
+    def fetch_view_po(self, project_id):
+        self.cur.execute('''
+        SELECT DISTINCT bom.id,
+                bom.rev,
+                bom.kode_material,
+                bom.deskripsi,
+                bom.spesifikasi,
+                bom.kuantitas,
+                bom.satuan,
+                spp.nomor,
+                spp.kuantitas,
+                spp.satuan,
+                spp.status,
+                po.nomor,
+                po.kuantitas,
+                po.satuan,
+                po.kode,
+                po.tanggal_kedatangan,
+                bom.keterangan
+        FROM bom
+        INNER JOIN spp
+        INNER JOIN po
+        INNER JOIN projects
+        WHERE bom.id = spp.bom_id AND bom.id = po.bom_id AND bom.project_id = ?
+        ''', ( project_id))
         rows = self.cur.fetchall()
         result_rows = []
         for row in rows:
@@ -127,17 +162,14 @@ class Database:
             ]
             temp_tuple = tuple(values)
             result_rows.append(temp_tuple)
-        return result_rows
-    # Fetch -> Overall bom for export feature
-    def fetch_all_bom(self, project_id):
-        pass
+        return sorted(result_rows)
     def select_project_image(self, project_id):
         self.cur.execute("SELECT image FROM projects WHERE id=?", (project_id,))
         rows = self.cur.fetchall()
         return rows
     # Fetch all with unique material to be exported
     def fetch_all_material_tables(self, param_project_id):
-        sql = '''SELECT bom.id,
+        sql = '''SELECT DISTINCT bom.id,
                     bom.rev,
                     bom.kode_material,
                     bom.deskripsi,
@@ -158,7 +190,7 @@ class Database:
                 INNER JOIN spp
                 INNER JOIN po
                 INNER JOIN projects
-                WHERE bom.id = spp.bom_id AND bom.id = po.bom_id AND projects.id = ?;
+                WHERE bom.id = spp.bom_id AND bom.id = po.bom_id AND bom.project_id = ?;
             '''
         self.cur.execute(sql, (param_project_id,))
         rows = self.cur.fetchall()
@@ -170,24 +202,24 @@ class Database:
         self.cur.execute("INSERT INTO projects VALUES (NULL, ?, ?, ?, ?, ?, ?)", (project_name, year, capacity, customer, totals, image,))
         self.conn.commit()
     # Insert bom -> bom (id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, filepath, project_id, spp_id, po_id, keterangan)
-    def insert_bom(self, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, project_id, keterangan):
-        self.cur.execute('''INSERT INTO bom VALUES (NULL, ?, ?, ?, ?, ?, ?, NULL, ?, ?)''',
-        (rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, project_id, keterangan))
+    def insert_bom(self, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, project_id, keterangan, bom_id):
+        self.cur.execute('''INSERT INTO bom VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)''',
+        (bom_id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, project_id, keterangan))
         self.conn.commit()
     # Insert spp
     def insert_spp(self, nomor, kuantitas, satuan, status, project_id, bom_id):
         sql = '''
-            INSERT INTO spp VALUES (NULL, ?, ?, ?, ?, ?, ?)
+            INSERT INTO spp VALUES (?, ?, ?, ?, ?, ?, ?)
         '''
-        variables = (nomor, kuantitas, satuan, status, project_id, bom_id)
+        variables = (bom_id, nomor, kuantitas, satuan, status, project_id, bom_id)
         self.cur.execute(sql, variables)
         self.conn.commit()
     # Insert po
     def insert_po(self, nomor, kuantitas, satuan, kode, tanggal_kedatangan, project_id, bom_id):
         sql = '''
-            INSERT INTO po VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO po VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         '''
-        variables = (nomor, kuantitas, satuan, kode, tanggal_kedatangan, project_id, bom_id)
+        variables = (bom_id, nomor, kuantitas, satuan, kode, tanggal_kedatangan, project_id, bom_id)
         self.cur.execute(sql, variables)
         self.conn.commit()
     # Insert user
@@ -196,10 +228,23 @@ class Database:
             INSERT INTO user_admin VALUES (NULL, ?, ?, NULL)
         ''', (username, password))
         self.conn.execute()
+        self.conn.commit()
 
     # Remove -> projects
     def remove(self, id):
         self.cur.execute("DELETE FROM projects WHERE id=?", (id,))
+        self.conn.commit()
+    # Remove -> bom
+    def remove_bom(self, id):
+        self.cur.execute("DELETE FROM bom WHERE id=?", (id,))
+        self.conn.commit()
+    # Remove -> spp
+    def remove_spp(self, id):
+        self.cur.execute("DELETE FROM spp WHERE id=?", (id,))
+        self.conn.commit()
+    # Remove -> po
+    def remove_po(self, id):
+        self.cur.execute("DELETE FROM po WHERE id=?", (id,))
         self.conn.commit()
 
     # UPDATE ROW
@@ -240,6 +285,57 @@ class Database:
 
     # SEARCH
     # Query projects by year -> projects
+    def search_material_by(self, kode_bom, deskripsi, spesifikasi, project_id):
+        sql = '''SELECT DISTINCT bom.id,
+                    bom.rev,
+                    bom.kode_material,
+                    bom.deskripsi,
+                    bom.spesifikasi,
+                    bom.kuantitas,
+                    bom.satuan,
+                    spp.nomor,
+                    spp.kuantitas,
+                    spp.satuan,
+                    spp.status,
+                    po.nomor,
+                    po.kuantitas,
+                    po.satuan,
+                    po.kode,
+                    po.tanggal_kedatangan,
+                    bom.keterangan
+                FROM bom
+                INNER JOIN spp
+                INNER JOIN po
+                INNER JOIN projects
+                WHERE bom.id = spp.bom_id AND bom.id = po.bom_id AND bom.project_id = ?'''
+        params = [project_id,]
+        
+        try:
+            if (str(kode_bom) != "") & len(str(kode_bom)) > 0:
+                sql += ' AND bom.kode_material LIKE ?'
+                params.append(kode_bom+'%')
+        except:
+            pass
+
+        try:
+            if len(str(deskripsi)) > 0:
+                sql += ' AND bom.deskripsi LIKE ?'
+                params.append(deskripsi+'%')
+        except:
+            pass
+
+        try:
+            if len(str(spesifikasi)) > 0:
+                sql += ' AND bom.spesifikasi LIKE ?'
+                params.append(spesifikasi+'%')
+        except:
+            pass
+
+        tuple_params = tuple(params)
+        self.cur.execute(sql, tuple_params)
+        rows = self.cur.fetchall()
+        return rows
+
     def search_by_year(self, year, name, id):
         sql = '''SELECT id, project_name, year, capacity, customer, totals FROM projects WHERE year=?'''
         try:
@@ -264,6 +360,7 @@ class Database:
         self.cur.execute(sql, tuple_params)
         rows = self.cur.fetchall()
         return rows
+
     # Query projects -> id, project_name -> importing selection
     def query_for_importing(self):
         sql = '''SELECT id, project_name FROM projects'''

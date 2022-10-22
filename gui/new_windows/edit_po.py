@@ -6,10 +6,10 @@ import gui.commands.commands as commands
 db = Database("sbu_projects.db")
 
 global_selected_po_id = 0
-def window_lihat_po(master, bom_id=0, spp_bom_id=0, project_id=0):
+def window_edit_po(master, bom_id=0, spp_bom_id=0, project_id=0):
     # WINDOW -> konfigurasi window proyek baru
     lihat_po = tk.Toplevel(master)
-    lihat_po.title("Review PO")
+    lihat_po.title("Edit PO")
     lihat_po.geometry("720x520")
     lihat_po.resizable(False, False)
     lihat_po.iconbitmap("./favicon.ico")
@@ -26,8 +26,8 @@ def window_lihat_po(master, bom_id=0, spp_bom_id=0, project_id=0):
 
     def fn_clear_search():
         entry_search_material_spec.delete(0, tk.END)
-        entry_search_material_deskripsi.delete(0, tk.END)
         entry_search_material_kode.delete(0, tk.END)
+        entry_search_material_deskripsi.delete(0, tk.END)
 
     def select_item(event):
         try:
@@ -54,7 +54,7 @@ def window_lihat_po(master, bom_id=0, spp_bom_id=0, project_id=0):
             entry_satuan.insert(tk.END, values[7])   
         except IndexError:
             pass 
-    
+
     def clear_treeview_po():
         for record in treeview_result.get_children():
             treeview_result.delete(record)
@@ -65,13 +65,22 @@ def window_lihat_po(master, bom_id=0, spp_bom_id=0, project_id=0):
         for row in db.fetch_view_po(x):
             treeview_result.insert(parent="", index=i, iid=i, values=(row[0], row[4], row[6], row[1], row[5], row[7], row[3], row[8]))
             i = i + 1
-
+    
     def fn_search_treeview(project_id, kode_bom, deskripsi, spesifikasi):
         clear_treeview_po()
         count = 0
         for row in db.search_material_by(kode_bom, deskripsi, spesifikasi, project_id):
             treeview_result.insert(parent="", index=count, iid=count, values=(row[0], row[4], row[6], row[1], row[5], row[7], row[3], row[8]))
             count += 1
+
+    def fn_refresh_treeview():
+        clear_treeview_po()
+        populate_treeview_po(project_id)
+
+    def fn_delete_selected_po(selected_id):
+        db.remove_po(selected_id)
+        clear_treeview_po()
+        populate_treeview_po(project_id)
 
     # ===VARIABLES=== 
     project_name = ""
@@ -90,7 +99,7 @@ def window_lihat_po(master, bom_id=0, spp_bom_id=0, project_id=0):
     # ===WIDGETS===
     # JUDUL
     if project_name == "":
-            title = tk.Label(lihat_po, text="Review PO", pady=4, padx=4, font=("Verdana bold", 12))
+            title = tk.Label(lihat_po, text="Edit PO", pady=4, padx=4, font=("Verdana bold", 12))
             title.grid(row=0, column=0, columnspan=6)        
     else:
             title = tk.Label(lihat_po, text=project_name, pady=4, padx=4, font=("Verdana bold", 12))
@@ -113,9 +122,9 @@ def window_lihat_po(master, bom_id=0, spp_bom_id=0, project_id=0):
     label_search_material_spec.grid(row=0, column=4, padx=6, sticky=tk.E, pady=3)
     entry_search_material_spec = tk.Entry(group_search, textvariable=input_cari_spec, font=("Arial", 11), width=15)
     entry_search_material_spec.grid(row=0, column=5, padx=12, sticky=tk.W, pady=6)
-    # GROUP -> Tombol Pencarian
+    # GROUP -> Tombol Pencarian 
     group_button_search = tk.Frame(lihat_po)
-    group_button_search.grid(row=3, column=0, columnspan=6, pady=3, padx=12, sticky=tk.E)
+    group_button_search.grid(row=3, column=0, columnspan=6, pady=3, padx=12, sticky=tk.E)    
     # clear
     button_search = ttk.Button(group_button_search, text="Clear", command=fn_clear_search)
     button_search.grid(row=0, column=0, sticky=tk.W, padx=12)
@@ -167,12 +176,15 @@ def window_lihat_po(master, bom_id=0, spp_bom_id=0, project_id=0):
     # GROUP BUTTON REVIEW MATERIAL
     group_button_review = tk.Frame(lihat_po)
     group_button_review.grid(row=5, column=0, columnspan=6, pady=3, padx=12, sticky=tk.E)
+    # delete
+    button_delete = ttk.Button(group_button_review, text="Hapus Data", command=lambda: fn_delete_selected_po(global_selected_po_id))
+    button_delete.grid(row=0, column=0, sticky=tk.W, padx=12)
     # clear
     button_clear = ttk.Button(group_button_review, text="Clear", command=fn_clear_selection)
-    button_clear.grid(row=0, column=0, padx=3)
+    button_clear.grid(row=0, column=1, padx=3)
     # refresh
-    button_refresh = ttk.Button(group_button_review, text="Refresh")
-    button_refresh.grid(row=0, column=1, padx=3)
+    button_refresh = ttk.Button(group_button_review, text="Refresh", command=fn_refresh_treeview)
+    button_refresh.grid(row=0, column=2, padx=3)
     # # LISTBOX
     # list_result = tk.Listbox(lihat_po, height=12, width=82, border=1)
     # list_result.grid(row=6, column=0, columnspan=6, pady=5)

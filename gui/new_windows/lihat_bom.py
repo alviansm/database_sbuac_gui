@@ -9,6 +9,7 @@ import gui.commands.commands as commands
 
 db = Database("sbu_projects.db")
 
+bom_selection_id = 0
 def window_lihat_bom(master, project_id=0, project_name=""):
     # WINDOW -> konfigurasi window proyek baru
     lihat_bom = tk.Toplevel(master)
@@ -32,7 +33,9 @@ def window_lihat_bom(master, project_id=0, project_name=""):
     input_cari_deskripsi = tk.StringVar()
     input_cari_spec = tk.StringVar()
 
-    project_id = project_id
+    project_id
+    global bom_selection_id
+    bom_selection_id = 0
 
     # ===FUNCTIONS===
     def fn_clear_view_bom():
@@ -43,14 +46,19 @@ def window_lihat_bom(master, project_id=0, project_name=""):
         entry_kuantitas.delete(0, tk.END)
         entry_satuan.delete("1.0", "end")
         entry_keterangan.delete(0, tk.END)
-        
+    
+    def fn_clear_search_bom():
+        entry_search_material_spec.delete(0, tk.END)
+        entry_search_material_kode.delete(0, tk.END)
+        entry_search_material_deskripsi.delete(0, tk.END)
+
     def select_item(event):
         try:            
             selected = treeview_result.selection()[0]
             values = treeview_result.item(selected, 'values')
             # ID    
-            global project_id
-            project_id = values[0]        
+            global bom_selection_id
+            bom_selection_id = values[0]     
             # Rev
             entry_material_rev.delete(0, tk.END)
             entry_material_rev.insert(tk.END, values[1])
@@ -84,6 +92,12 @@ def window_lihat_bom(master, project_id=0, project_name=""):
         for row in db.fetch_view_bom(project_id):
             treeview_result.insert(parent="", index=row[0], iid=row[0], values=(row[0], row[1], row[2], row[7], row[3], row[4], row[5], row[6]))
 
+    def fn_search_treeview(project_id, kode_bom, deskripsi, spesifikasi):
+        clear_treeview_bom()
+        count = 0
+        for row in db.search_material_by(kode_bom, deskripsi, spesifikasi, project_id):
+            treeview_result.insert(parent="", index=count, iid=count, values=(row[0], row[1], row[2], row[7], row[3], row[4], row[5], row[6]))
+            count += 1
 
     # ===WIDGETS===
     # JUDUL
@@ -115,11 +129,14 @@ def window_lihat_bom(master, project_id=0, project_name=""):
     group_button_search = tk.Frame(lihat_bom)
     group_button_search.grid(row=3, column=0, columnspan=6, pady=3, padx=12, sticky=tk.E)
     # clear
-    button_search = ttk.Button(group_button_search, text="Clear")
-    button_search.grid(row=0, column=0, sticky=tk.W, padx=12)
+    button_search = ttk.Button(group_button_search, text="Clear", command=fn_clear_search_bom)
+    button_search.grid(row=0, column=0, sticky=tk.W)
+    # query_all
+    button_search = ttk.Button(group_button_search, text="Query All", command=lambda: populate_treeview_bom(project_id))
+    button_search.grid(row=0, column=1, sticky=tk.W, padx=12)
     # cari
-    button_search = ttk.Button(group_button_search, text="Cari")
-    button_search.grid(row=0, column=1)
+    button_search = ttk.Button(group_button_search, text="Cari", command=lambda: fn_search_treeview(project_id, entry_search_material_kode.get(), entry_search_material_deskripsi.get(), entry_search_material_spec.get()))
+    button_search.grid(row=0, column=2)
     # GROUP -> REVIEW MATERIAL TERPILIH
     group_insert = tk.LabelFrame(lihat_bom, text="Review Material", font=("Verdana bold", 9))
     group_insert.grid(row=4, column=0, columnspan=6, padx=12)
@@ -164,10 +181,10 @@ def window_lihat_bom(master, project_id=0, project_name=""):
     button_clear = ttk.Button(group_button_review, text="Clear", command=fn_clear_view_bom)
     button_clear.grid(row=0, column=0, padx=3)
     # lihat spp
-    button_lihat_spp = ttk.Button(group_button_review, text="Lihat SPP", command=lambda: ls.window_lihat_spp(master, project_id, project_id))
+    button_lihat_spp = ttk.Button(group_button_review, text="Lihat SPP", command=lambda: ls.window_lihat_spp(master, bom_selection_id, bom_selection_id, project_id))
     button_lihat_spp.grid(row=0, column=1, padx=3)
     # lihat po
-    button_lihat_po = ttk.Button(group_button_review, text="Lihat PO", command=lambda: lp.window_lihat_po(master, project_id, project_id))
+    button_lihat_po = ttk.Button(group_button_review, text="Lihat PO", command=lambda: lp.window_lihat_po(master, bom_selection_id, bom_selection_id, project_id))
     button_lihat_po.grid(row=0, column=2, padx=3)
     # data sheet
     button_datasheet = ttk.Button(group_button_review, text="Data Sheet")

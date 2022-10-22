@@ -84,6 +84,7 @@ def window_new_project(master, project_name=""):
 
         def fn_remove_project(x):
                 db.remove(x)
+                clear_treeview_data()
                 populate_list_treeview()
 
         # Variables

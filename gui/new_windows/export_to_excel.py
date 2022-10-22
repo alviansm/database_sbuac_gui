@@ -1,9 +1,6 @@
-from re import T
 import pandas as pd
-import openpyxl
-from openpyxl import Workbook
 from openpyxl import load_workbook
-from openpyxl.styles import Alignment, Font, Border, Side, PatternFill
+from openpyxl.styles import Alignment, Font, Border, Side
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
@@ -104,9 +101,7 @@ def fn_window_export_to_excel(master):
         try:
             # Pandas dataframe set up
             a = db.fetch_all_material_tables(param_project_id)
-            global rows_length
-            rows_length = len(a)
-            df = pd.DataFrame(a)
+            df = pd.DataFrame(sorted(a))
             path = entry_path_export.get()
             df.to_excel(path, sheet_name="Bill of Materials", startrow=6, startcol=1, header=False, index=False)            
             # Call the function to format document
@@ -129,7 +124,6 @@ def fn_window_export_to_excel(master):
         global rows_length
         length = rows_length
         for rows in sheet.iter_cols(min_row=7, max_row=int(length)+6, min_col=2, max_col=18):
-            print(rows)
             for cell in rows:
                 cell.alignment = Alignment(horizontal="center", vertical="center")
                 cell.border = Border(top=thin, right=thin, bottom=thin, left=thin)

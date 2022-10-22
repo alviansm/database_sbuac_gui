@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import messagebox
 
+import time
 from database.database import Database
 import gui.commands.commands as commands
 
@@ -34,6 +36,13 @@ def fn_window_import_excel(parent):
     PROJECT_SELECTION = query_project_name()
     project_selected.set(PROJECT_SELECTION[0])
 
+    def start_import(path, project):
+        label_status.configure(text="Loading..", background="cyan")
+        # Progress
+        commands.excel_to_list_insert(path, project)
+        label_status.configure(text="Berhasil mengimpor", fg="green")
+        messagebox.showinfo("Info", "Berhasil mengimpor")
+
     # Judul
     label_title = tk.Label(window_import, text="Impor database dari Excel", font=("Verdana bold", 8))
     label_title.pack(pady=6)
@@ -43,7 +52,7 @@ def fn_window_import_excel(parent):
 
     button_choose = ttk.Button(group_buttons, text="Pilih Excel", command=lambda: fn_choose_file(label_filename))
     button_choose.grid(row=0, column=0, padx=3)
-    button_submit = ttk.Button(group_buttons, text="Mulai", command=lambda: commands.excel_to_list_insert(filename_path, project_selected.get(), label_status))
+    button_submit = ttk.Button(group_buttons, text="Mulai", command=lambda:  start_import(filename_path, project_selected.get()))
     button_submit.grid(row=0, column=1)
     # Select project group
     group_select_project = tk.Frame(window_import)

@@ -1,6 +1,8 @@
 import tkinter as tk
+from tkinter import ttk
 import pandas as pd
 from tkinter import messagebox
+import time
 
 from database.database import Database
 
@@ -26,17 +28,14 @@ def fn_clear_entries(*entries):
 	for entry in temp_entries:
 		entry.delete(0, tk.END)
 
-def excel_to_list_insert(path, selected_project, label_to_update):
-	try:
-		bom_id_ref = 1
-		df = pd.read_excel(path, sheet_name="BOM", skiprows=5, usecols='B:R')
-		df_value = df.values
-		for val in df_value:
-			db.insert_bom(int(val[1]), val[2], val[3], val[4], val[5], val[6], selected_project[0], val[16])
-			db.insert_spp(int(val[7]), val[8], val[9], val[10], selected_project[0], bom_id_ref)
-			db.insert_po(int(val[11]), val[12], val[13], val[14], val[15], selected_project[0], bom_id_ref)
-			bom_id_ref = bom_id_ref + 1
-		label_to_update.configure(text="Berhasil mengimpor.", fg="green")
-		messagebox.showinfo("Info", "Berhasil mengimpor")
-	except:
-		messagebox.showerror("Error", "Terjadi kegagalan, silahkan laporkan ke pengembang")
+def excel_to_list_insert(path, selected_project):	
+	# try:
+	df = pd.read_excel(path, skiprows=5, usecols='B:R')
+	df = df.dropna()
+	df_value = df.values
+	for val in df_value:
+		db.insert_bom(val[1], val[2], val[3], val[4], val[5], val[6], selected_project[0], val[16], int(val[0]))
+		db.insert_spp(val[7], val[8], val[9], val[10], selected_project[0], int(val[0]))
+		db.insert_po(val[11], val[12], val[13], val[14], val[15], selected_project[0], int(val[0]))
+	# except:
+	# 	messagebox.showerror("Error", "Terjadi kegagalan, silahkan laporkan ke pengembang")

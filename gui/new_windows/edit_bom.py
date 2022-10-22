@@ -4,11 +4,12 @@ from tkinter import filedialog
 import subprocess, os, platform
 
 from database.database import Database
-import gui.new_windows.lihat_po as lp
-import gui.new_windows.lihat_spp as ls
+import gui.new_windows.edit_po as ep
+import gui.new_windows.edit_spp as ess
 
 db = Database("sbu_projects.db")
 
+bom_selection_id = 0
 def window_edit_bom(master, project_id=0, project_name=""):
     # WINDOW -> konfigurasi window proyek baru
     lihat_bom = tk.Toplevel(master)
@@ -45,14 +46,19 @@ def window_edit_bom(master, project_id=0, project_name=""):
         entry_satuan.delete("1.0", "end")
         entry_keterangan.delete(0, tk.END)
         entry_datasheet_path.delete("1.0", "end")
-        
+    
+    def fn_clear_search_bom():
+        entry_search_material_deskripsi.delete(0, tk.END)
+        entry_search_material_kode.delete(0, tk.END)
+        entry_search_material_spec.delete(0, tk.END)
+
     def select_item(event):
         try:            
             selected = treeview_result.selection()[0]
             values = treeview_result.item(selected, 'values')
             # ID    
-            global project_id
-            project_id = values[0]        
+            global bom_selection_id
+            bom_selection_id = values[0]        
             # Rev
             entry_material_rev.delete(0, tk.END)
             entry_material_rev.insert(tk.END, values[1])
@@ -90,6 +96,13 @@ def window_edit_bom(master, project_id=0, project_name=""):
         for row in db.fetch_view_bom(project_id):
             treeview_result.insert(parent="", index=row[0], iid=row[0], values=(row[0], row[1], row[2], row[7], row[3], row[4], row[5], row[6]))
 
+    def fn_search_treeview(project_id, kode_bom, deskripsi, spesifikasi):
+        clear_treeview_bom()
+        count = 0
+        for row in db.search_material_by(kode_bom, deskripsi, spesifikasi, project_id):
+            treeview_result.insert(parent="", index=count, iid=count, values=(row[0], row[1], row[2], row[7], row[3], row[4], row[5], row[6]))
+            count += 1
+
     def update_bom(project_id=0, rev="", kode_material="", deskripsi="", spesifikasi="", kuantitas=0, satuan="", keterangan="", datasheet_path=""):
         # update in database
         db.update_bom(project_id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan, entry_datasheet_path.get("1.0", "end"))
@@ -118,6 +131,15 @@ def window_edit_bom(master, project_id=0, project_name=""):
             os.startfile(filepath[0])
         else:
             subprocess.call(('xdg-open', filepath[0]))
+
+    def fn_refresh_treeview():
+        clear_treeview_bom()
+        populate_treeview_bom()
+
+    def fn_remove_delete(selection_id):
+        db.remove_bom(selection_id)
+        clear_treeview_bom()
+        populate_treeview_bom(bom_selection_id)
 
     # ===WIDGETS===
     # JUDUL
@@ -149,11 +171,14 @@ def window_edit_bom(master, project_id=0, project_name=""):
     group_button_search = tk.Frame(lihat_bom)
     group_button_search.grid(row=3, column=0, columnspan=6, pady=3, padx=12, sticky=tk.E)
     # clear
-    button_search = ttk.Button(group_button_search, text="Clear")
+    button_search = ttk.Button(group_button_search, text="Clear", command=fn_clear_search_bom)
     button_search.grid(row=0, column=0, sticky=tk.W, padx=12)
+    # clear
+    button_refresh = ttk.Button(group_button_search, text="Refresh", command=fn_refresh_treeview)
+    button_refresh.grid(row=0, column=1, sticky=tk.W, padx=12)
     # cari
-    button_search = ttk.Button(group_button_search, text="Cari")
-    button_search.grid(row=0, column=1)
+    button_search = ttk.Button(group_button_search, text="Cari", command=lambda: fn_search_treeview(project_id, entry_search_material_kode.get(), entry_search_material_deskripsi.get(), entry_search_material_spec.get()))
+    button_search.grid(row=0, column=2)
     # GROUP -> REVIEW MATERIAL TERPILIH
     group_insert = tk.LabelFrame(lihat_bom, text="Review Material", font=("Verdana bold", 9))
     group_insert.grid(row=4, column=0, columnspan=6, padx=12)
@@ -201,23 +226,23 @@ def window_edit_bom(master, project_id=0, project_name=""):
     group_button_review = tk.Frame(lihat_bom)
     group_button_review.grid(row=5, column=0, columnspan=6, pady=3, padx=12, sticky=tk.E)
     # hapus bom
-    button_delete_bom = ttk.Button(group_button_review, text="Hapus BOM")
+    button_delete_bom = ttk.Button(group_button_review, text="Hapus BOM", command=lambda: fn_remove_delete(bom_selection_id))
     button_delete_bom.grid(row=0, column=0, padx=3)
     # clear
     button_clear = ttk.Button(group_button_review, text="Clear", command=fn_clear_view_bom)
-    button_clear.grid(row=0, column=1, padx=3)
+    button_clear.grid(row=0, column=2, padx=3)
     # update
     button_update_bom = ttk.Button(group_button_review, text="Update", command=lambda: update_bom(project_id, entry_material_rev.get(), entry_material_code.get(), entry_deskripsi.get(), entry_spesifikasi.get(), entry_kuantitas.get(), entry_satuan.get("1.0", "end"), entry_keterangan.get()))
-    button_update_bom.grid(row=0, column=2, padx=3)
+    button_update_bom.grid(row=0, column=3, padx=3)
     # lihat spp
-    button_lihat_spp = ttk.Button(group_button_review, text="Edit SPP", command=lambda: ls.window_lihat_spp(master, project_id, project_id))
-    button_lihat_spp.grid(row=0, column=3, padx=3)
+    button_lihat_spp = ttk.Button(group_button_review, text="Edit SPP", command=lambda: ess.window_edit_spp(master, bom_selection_id, bom_selection_id, project_id))
+    button_lihat_spp.grid(row=0, column=4, padx=3)
     # lihat po
-    button_lihat_po = ttk.Button(group_button_review, text="Edit PO", command=lambda: lp.window_lihat_po(master, project_id, project_id))
-    button_lihat_po.grid(row=0, column=4, padx=3)
+    button_lihat_po = ttk.Button(group_button_review, text="Edit PO", command=lambda: ep.window_edit_po(master, bom_selection_id, bom_selection_id, project_id))
+    button_lihat_po.grid(row=0, column=5, padx=3)
     # data sheet
     button_datasheet = ttk.Button(group_button_review, text="Data Sheet", command=lambda: fn_preview_bom_datasheet(entry_material_code.get()))
-    button_datasheet.grid(row=0, column=5, padx=3)
+    button_datasheet.grid(row=0, column=6, padx=3)
     # label message
     if project_id == 0:
         label_message = tk.Label(lihat_bom, text="Silahkan pilih proyek dengan mengklik baris proyek pada tabel", font=("Verdana bold", 9), fg="red")
