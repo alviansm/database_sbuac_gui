@@ -73,13 +73,14 @@ def window_edit_po(master, bom_id=0, spp_bom_id=0, project_id=0):
             treeview_result.insert(parent="", index=count, iid=count, values=(row[0], row[4], row[6], row[1], row[5], row[7], row[3], row[8]))
             count += 1
 
-    def fn_refresh_treeview():
+    def fn_refresh_treeview(project_id):
         clear_treeview_po()
         populate_treeview_po(project_id)
-
-    def fn_delete_selected_po(selected_id):
-        db.remove_po(selected_id)
+    
+    def fn_update_selection(id, nomor, kuantitas, satuan, kode, tanggal_kedatangan, project_id):
         clear_treeview_po()
+        fn_clear_selection()
+        db.update_po(id, nomor, kuantitas, satuan, kode, tanggal_kedatangan)
         populate_treeview_po(project_id)
 
     # ===VARIABLES=== 
@@ -91,6 +92,7 @@ def window_edit_po(master, bom_id=0, spp_bom_id=0, project_id=0):
     input_material_tanggal = tk.StringVar()
     input_material_kuantitas = tk.IntVar()
     input_material_kode = tk.StringVar()
+    input_material_keterangan = tk.StringVar()
 
     input_cari_kode = tk.StringVar()
     input_cari_deskripsi = tk.StringVar()
@@ -176,14 +178,14 @@ def window_edit_po(master, bom_id=0, spp_bom_id=0, project_id=0):
     # GROUP BUTTON REVIEW MATERIAL
     group_button_review = tk.Frame(lihat_po)
     group_button_review.grid(row=5, column=0, columnspan=6, pady=3, padx=12, sticky=tk.E)
-    # delete
-    button_delete = ttk.Button(group_button_review, text="Hapus Data", command=lambda: fn_delete_selected_po(global_selected_po_id))
-    button_delete.grid(row=0, column=0, sticky=tk.W, padx=12)
     # clear
     button_clear = ttk.Button(group_button_review, text="Clear", command=fn_clear_selection)
-    button_clear.grid(row=0, column=1, padx=3)
+    button_clear.grid(row=0, column=0, padx=3)
+    # update
+    button_update = ttk.Button(group_button_review, text="Update", command=lambda: fn_update_selection(global_selected_po_id, entry_material_number.get(), entry_material_kuantitas.get(), entry_satuan.get("1.0", "end"), entry_material_kode.get(), entry_material_tanggal.get(), project_id))
+    button_update.grid(row=0, column=1, padx=3)
     # refresh
-    button_refresh = ttk.Button(group_button_review, text="Refresh", command=fn_refresh_treeview)
+    button_refresh = ttk.Button(group_button_review, text="Refresh", command=lambda: fn_refresh_treeview(project_id))
     button_refresh.grid(row=0, column=2, padx=3)
     # # LISTBOX
     # list_result = tk.Listbox(lihat_po, height=12, width=82, border=1)

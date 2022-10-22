@@ -6,6 +6,7 @@ import subprocess, os, platform
 from database.database import Database
 import gui.new_windows.edit_po as ep
 import gui.new_windows.edit_spp as ess
+import gui.new_windows.add_new_bom as anb
 
 db = Database("sbu_projects.db")
 
@@ -132,7 +133,7 @@ def window_edit_bom(master, project_id=0, project_name=""):
         else:
             subprocess.call(('xdg-open', filepath[0]))
 
-    def fn_refresh_treeview():
+    def fn_refresh_treeview(project_id):
         clear_treeview_bom()
         populate_treeview_bom(project_id)
 
@@ -174,7 +175,7 @@ def window_edit_bom(master, project_id=0, project_name=""):
     button_search = ttk.Button(group_button_search, text="Clear", command=fn_clear_search_bom)
     button_search.grid(row=0, column=0, sticky=tk.W)
     # clear
-    button_refresh = ttk.Button(group_button_search, text="Refresh", command=fn_refresh_treeview)
+    button_refresh = ttk.Button(group_button_search, text="Refresh", command=lambda: fn_refresh_treeview(project_id))
     button_refresh.grid(row=0, column=1, sticky=tk.W, padx=12)
     # cari
     button_search = ttk.Button(group_button_search, text="Cari", command=lambda: fn_search_treeview(project_id, entry_search_material_kode.get(), entry_search_material_deskripsi.get(), entry_search_material_spec.get()))
@@ -243,6 +244,9 @@ def window_edit_bom(master, project_id=0, project_name=""):
     # data sheet
     button_datasheet = ttk.Button(group_button_review, text="Data Sheet", command=lambda: fn_preview_bom_datasheet(entry_material_code.get()))
     button_datasheet.grid(row=0, column=6, padx=3)
+    # +BOM
+    button_add_bom = ttk.Button(group_button_review, text="+BOM", width=7, command=lambda: anb.fn_window_add_new_material(master, project_id))
+    button_add_bom.grid(row=0, column=7, padx=3)
     # label message
     if project_id == 0:
         label_message = tk.Label(lihat_bom, text="Silahkan pilih proyek dengan mengklik baris proyek pada tabel", font=("Verdana bold", 9), fg="red")

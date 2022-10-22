@@ -26,6 +26,7 @@ def window_edit_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
     input_material_spesifikasi = tk.StringVar()
     input_satuan = tk.StringVar()
     input_keterangan = tk.StringVar()
+    input_status = tk.StringVar()
 
     input_cari_kode = tk.StringVar()
     input_cari_deskripsi = tk.StringVar()
@@ -39,6 +40,7 @@ def window_edit_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
         entry_material_spesifikasi.delete(0, tk.END)
         entry_kuantitas.delete(0, tk.END)
         entry_satuan.delete("1.0", "end")
+        entry_material_status.delete(0, tk.END)
 
     def fn_clear_search():
         entry_search_material_spec.delete(0, tk.END)
@@ -70,7 +72,6 @@ def window_edit_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
             
             global global_selected_spp_id
             global_selected_spp_id = values[0]
-
             # nomor
             entry_material_nomor.delete(0, tk.END)
             entry_material_nomor.insert(tk.END, values[1])
@@ -90,7 +91,10 @@ def window_edit_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
             input_satuan = values[6]
             entry_satuan.delete("1.0", "end")
             entry_satuan.insert(tk.END, input_satuan)
-
+            # status
+            input_status = values[7]
+            entry_material_status.delete(0, tk.END)
+            entry_material_status.insert(tk.END, values[7])
             input_material_nomor = values[1]
             input_bom_code = values[2]
             input_material_deskripsi = values[3]
@@ -100,12 +104,13 @@ def window_edit_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
         except IndexError:
             pass           
 
-    def fn_remove_selection(selected_id):
-        db.remove_spp(selected_id)
+    def fn_update_selection(selected_id, nomor, kuantitas, satuan, status):
         clear_treeview_spp()
+        fn_clear_selection()
+        db.update_spp(selected_id, nomor, kuantitas, satuan, status)
         populate_treeview_spp(project_id)
 
-    def fn_refresh():
+    def fn_refresh(project_id):
         clear_treeview_spp()
         populate_treeview_spp(project_id)
 
@@ -176,17 +181,22 @@ def window_edit_spp(master, bom_id=0, spp_bom_id=0, project_id=0):
     label_material_spesifikasi.grid(row=1, column=2, padx=12, sticky=tk.E, pady=3)
     entry_material_spesifikasi = tk.Entry(group_insert, textvariable=input_material_spesifikasi, font=("Arial", 11), width=12)
     entry_material_spesifikasi.grid(row=1, column=3, padx=3)
+    # status
+    label_material_status = tk.Label(group_insert, text="Status : ", font=("Arial", 11))
+    label_material_status.grid(row=2, column=0, padx=12, sticky=tk.E, pady=3)
+    entry_material_status = tk.Entry(group_insert, textvariable=input_status, font=("Arial", 11), width=16)
+    entry_material_status.grid(row=2, column=1, padx=3)
     # GROUP BUTTON REVIEW MATERIAL
     group_button_review = tk.Frame(lihat_po)
     group_button_review.grid(row=5, column=0, columnspan=6, pady=3, padx=12, sticky=tk.E)
-    # delete
-    button_delete = ttk.Button(group_button_review, text="Hapus Data", command=lambda: fn_remove_selection(global_selected_spp_id))
-    button_delete.grid(row=0, column=0, padx=3)
+    # update
+    button_update = ttk.Button(group_button_review, text="Update", command=lambda: fn_update_selection(global_selected_spp_id, entry_material_nomor.get(), entry_kuantitas.get(), entry_satuan.get("1.0", "end"), entry_material_status.get()))
+    button_update.grid(row=0, column=0, padx=3)
     # clear
     button_clear = ttk.Button(group_button_review, text="Clear", command=fn_clear_selection)
     button_clear.grid(row=0, column=1, padx=3)
     # refresh
-    button_update = ttk.Button(group_button_review, text="Refresh", command=fn_refresh)
+    button_update = ttk.Button(group_button_review, text="Refresh", command=lambda: fn_refresh(project_id))
     button_update.grid(row=0, column=2, padx=3)
     # LISTBOX
     # list_result = tk.Listbox(lihat_po, height=12, width=82, border=1)

@@ -29,13 +29,13 @@ def fn_clear_entries(*entries):
 		entry.delete(0, tk.END)
 
 def excel_to_list_insert(path, selected_project):	
-	# try:
-	df = pd.read_excel(path, skiprows=5, usecols='B:R')
-	df = df.dropna()
-	df_value = df.values
-	for val in df_value:
-		db.insert_bom(val[1], val[2], val[3], val[4], val[5], val[6], selected_project[0], val[16], int(val[0]))
-		db.insert_spp(val[7], val[8], val[9], val[10], selected_project[0], int(val[0]))
-		db.insert_po(val[11], val[12], val[13], val[14], val[15], selected_project[0], int(val[0]))
-	# except:
-	# 	messagebox.showerror("Error", "Terjadi kegagalan, silahkan laporkan ke pengembang")
+	try:
+		df = pd.read_excel(path, skiprows=5, usecols='B:R')
+		df = df.dropna()
+		df_value = df.values
+		for val in df_value:
+			db.insert_bom(val[1], val[2], val[3], val[4], val[5], val[6], selected_project[0], val[16], int(val[0]))
+			db.insert_spp(val[7], val[8], val[9], val[10], selected_project[0], int(val[0]))
+			db.insert_po(val[11], val[12], val[13], val[14], val[15], selected_project[0], int(val[0]))
+	except:
+		messagebox.showerror("Error", "Terjadi kegagalan, silahkan laporkan ke pengembang")

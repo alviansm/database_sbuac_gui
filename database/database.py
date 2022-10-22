@@ -30,7 +30,7 @@ class Database:
             satuan VARCHAR(12),
             filepath TEXT, 
             project_id INTEGER, 
-            keterangan BOOLEAN,
+            keterangan TEXT,
             PRIMARY KEY (id),
             FOREIGN KEY (project_id) REFERENCES projects(id)
             )'''
@@ -43,7 +43,7 @@ class Database:
             nomor TEXT, 
             kuantitas DOUBLE, 
             satuan VARCHAR(12), 
-            status BOOLEAN,
+            status TEXT,
             project_id INTEGER,
             bom_id INTEGER,
             PRIMARY KEY (id),

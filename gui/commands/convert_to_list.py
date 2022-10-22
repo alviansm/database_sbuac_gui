@@ -37,6 +37,7 @@ def fn_window_import_excel(parent):
     project_selected.set(PROJECT_SELECTION[0])
 
     def start_import(path, project):
+        messagebox.showinfo("Memulai", "Silahkan tunggu hingga muncul notifikasi berikutnya..")
         label_status.configure(text="Loading..", background="cyan")
         # Progress
         commands.excel_to_list_insert(path, project)
