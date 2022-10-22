@@ -91,9 +91,9 @@ def window_edit_bom(master, project_id=0, project_name=""):
         for record in treeview_result.get_children():
             treeview_result.delete(record)
 
-    def populate_treeview_bom(project_id):
+    def populate_treeview_bom(x):
         clear_treeview_bom()
-        for row in db.fetch_view_bom(project_id):
+        for row in db.fetch_view_bom(x):
             treeview_result.insert(parent="", index=row[0], iid=row[0], values=(row[0], row[1], row[2], row[7], row[3], row[4], row[5], row[6]))
 
     def fn_search_treeview(project_id, kode_bom, deskripsi, spesifikasi):
@@ -103,16 +103,16 @@ def window_edit_bom(master, project_id=0, project_name=""):
             treeview_result.insert(parent="", index=count, iid=count, values=(row[0], row[1], row[2], row[7], row[3], row[4], row[5], row[6]))
             count += 1
 
-    def update_bom(project_id=0, rev="", kode_material="", deskripsi="", spesifikasi="", kuantitas=0, satuan="", keterangan="", datasheet_path=""):
+    def update_bom(selection_id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan, datasheet_path):
+        # clear treeview data
+        clear_treeview_bom()        
         # update in database
-        db.update_bom(project_id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan, entry_datasheet_path.get("1.0", "end"))
+        db.update_bom(selection_id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan, entry_datasheet_path.get("1.0", "end"))
         # update project filename
         if len(datasheet_path) > 0:
-            db.update_bom_filename(str(datasheet_path).strip(), id)
+            db.update_bom_filename(str(datasheet_path).strip(), kode_material)
         # clear entries
-        fn_clear_view_bom()
-        # clear treeview data
-        clear_treeview_bom()
+        fn_clear_view_bom()        
         # repopulate bom treeview data
         populate_treeview_bom(project_id)
 
@@ -134,12 +134,12 @@ def window_edit_bom(master, project_id=0, project_name=""):
 
     def fn_refresh_treeview():
         clear_treeview_bom()
-        populate_treeview_bom()
+        populate_treeview_bom(project_id)
 
     def fn_remove_delete(selection_id):
         db.remove_bom(selection_id)
         clear_treeview_bom()
-        populate_treeview_bom(bom_selection_id)
+        populate_treeview_bom(project_id)
 
     # ===WIDGETS===
     # JUDUL
@@ -172,7 +172,7 @@ def window_edit_bom(master, project_id=0, project_name=""):
     group_button_search.grid(row=3, column=0, columnspan=6, pady=3, padx=12, sticky=tk.E)
     # clear
     button_search = ttk.Button(group_button_search, text="Clear", command=fn_clear_search_bom)
-    button_search.grid(row=0, column=0, sticky=tk.W, padx=12)
+    button_search.grid(row=0, column=0, sticky=tk.W)
     # clear
     button_refresh = ttk.Button(group_button_search, text="Refresh", command=fn_refresh_treeview)
     button_refresh.grid(row=0, column=1, sticky=tk.W, padx=12)
@@ -232,7 +232,7 @@ def window_edit_bom(master, project_id=0, project_name=""):
     button_clear = ttk.Button(group_button_review, text="Clear", command=fn_clear_view_bom)
     button_clear.grid(row=0, column=2, padx=3)
     # update
-    button_update_bom = ttk.Button(group_button_review, text="Update", command=lambda: update_bom(project_id, entry_material_rev.get(), entry_material_code.get(), entry_deskripsi.get(), entry_spesifikasi.get(), entry_kuantitas.get(), entry_satuan.get("1.0", "end"), entry_keterangan.get()))
+    button_update_bom = ttk.Button(group_button_review, text="Update", command=lambda: update_bom(int(bom_selection_id), str(entry_material_rev.get()), entry_material_code.get(), entry_deskripsi.get(), entry_spesifikasi.get(), entry_kuantitas.get(), entry_satuan.get("1.0", "end"), entry_keterangan.get(), entry_datasheet_path.get("1.0", "end")))
     button_update_bom.grid(row=0, column=3, padx=3)
     # lihat spp
     button_lihat_spp = ttk.Button(group_button_review, text="Edit SPP", command=lambda: ess.window_edit_spp(master, bom_selection_id, bom_selection_id, project_id))

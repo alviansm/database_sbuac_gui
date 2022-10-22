@@ -21,7 +21,6 @@ def fn_window_export_to_excel(master):
     window_export_to_excel.geometry("695x380")
     window_export_to_excel.resizable(False, False)
     window_export_to_excel.iconbitmap("./favicon.ico")
-    window_export_to_excel.attributes("-topmost", True)
 
     # === VARIABLES DECLARATION ===
     EXPORT_FORMAT_OPTIONS = [
@@ -103,9 +102,9 @@ def fn_window_export_to_excel(master):
             a = db.fetch_all_material_tables(param_project_id)
             df = pd.DataFrame(sorted(a))
             path = entry_path_export.get()
-            df.to_excel(path, sheet_name="Bill of Materials", startrow=6, startcol=1, header=False, index=False)            
+            df.to_excel(path+".xlsx", sheet_name="Bill of Materials", startrow=6, startcol=1, header=False, index=False)            
             # Call the function to format document
-            format_excel_bom(path)
+            format_excel_bom(path+".xlsx")
             # Show message info
             messagebox.showinfo("Info", "Berhasil mengekspor")
         except PermissionError:
@@ -123,7 +122,7 @@ def fn_window_export_to_excel(master):
         # content styling
         global rows_length
         length = rows_length
-        for rows in sheet.iter_cols(min_row=7, max_row=int(length)+6, min_col=2, max_col=18):
+        for rows in sheet.iter_cols(min_row=6, max_row=int(length)*1.1, min_col=2, max_col=18):
             for cell in rows:
                 cell.alignment = Alignment(horizontal="center", vertical="center")
                 cell.border = Border(top=thin, right=thin, bottom=thin, left=thin)

@@ -234,18 +234,14 @@ class Database:
     def remove(self, id):
         self.cur.execute("DELETE FROM projects WHERE id=?", (id,))
         self.conn.commit()
-    # Remove -> bom
+
     def remove_bom(self, id):
         self.cur.execute("DELETE FROM bom WHERE id=?", (id,))
         self.conn.commit()
-    # Remove -> spp
-    def remove_spp(self, id):
         self.cur.execute("DELETE FROM spp WHERE id=?", (id,))
         self.conn.commit()
-    # Remove -> po
-    def remove_po(self, id):
-        self.cur.execute("DELETE FROM po WHERE id=?", (id,))
-        self.conn.commit()
+        self.cur.execute("DELETE FROM po WHERE id=?", (id,))        
+        self.conn.commit()            
 
     # UPDATE ROW
     # Update -> projects    
@@ -259,6 +255,8 @@ class Database:
         self.conn.commit()
     # Update -> BOM
     def update_bom(self, id, rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan, filepath):
+        if filepath == None:
+            filepath = ""
         sql = "UPDATE bom SET rev=?, kode_material=?, deskripsi=?, spesifikasi=?, kuantitas=?, satuan=?, keterangan=? WHERE id=?"
         variables = (rev, kode_material, deskripsi, spesifikasi, kuantitas, satuan, keterangan, id)
         self.cur.execute(sql, variables)
