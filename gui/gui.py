@@ -1,3 +1,4 @@
+from genericpath import exists
 import tkinter as tk
 from tkinter import CENTER, ttk
 from tkinter import font
@@ -5,6 +6,7 @@ from tkinter import messagebox
 from turtle import width
 from PIL import ImageTk, Image
 import subprocess, os, platform
+import shutil
 
 from database.database import Database
 import gui.new_windows.new_project as np
@@ -103,15 +105,28 @@ class Application(tk.Frame):
 
     # Menu commands
     def menu_commands(self):
-        pass
+        try:
+            current_directory = "./sbu_projects.db"
+            export_directory = "C:\\Program Files\\PYKonektor\\sbu_projects.db"
+            exist_directory = "C:\\Program Files\\PYKonektor\\"
+            # Remove file if exist
+            if os.path.exists(exist_directory) == False:
+                os.mkdir("C:\\Program Files\\PYKonektor")
+            # Copy
+            shutil.copy(current_directory, export_directory)
+            messagebox.showinfo("Info", "Berhasil memback-up data di C:\\Program Files\\PYKonektor")
+        except PermissionError:
+            messagebox.showerror("Error", "Akses Ditolak, silahkan buka program dengan run as administrator")
+        except:
+            messagebox.showerror("Error", "Tidak bisa memback-up database")
 
     def create_menu_items(self):
         # File
         self.file_menu = tk.Menu(self.app_menu, tearoff=False, font=("Arial", 11))
         self.app_menu.add_cascade(label="File", menu=self.file_menu)
         self.file_menu.add_command(label="Impor dari Excel", command=lambda: ctl.fn_window_import_excel(self.master))
-        # self.file_menu.add_separator()
-        # self.file_menu.add_command(label="Ekspor database", command=self.menu_commands)
+        self.file_menu.add_separator()
+        self.file_menu.add_command(label="Backup", command=self.menu_commands)
         # self.file_menu.add_command(label="Backup database", command=self.menu_commands)
         # self.file_menu.add_command(label="Pilih database", command=self.menu_commands) 
         # self.file_menu.add_separator()
